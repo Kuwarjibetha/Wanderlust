@@ -28,6 +28,12 @@ app.use(methodOverride("_method"))
 app.use(express.static(path.join(__dirname, "public")));
 app.engine("ejs",ejsMate);
 
+// function normalizeListingImage(listing) {
+//     if (typeof listing.image === "string") {
+//         listing.image = { url: listing.image };
+//     }
+// }
+
 
 app.get("/",async(req,res)=>{
     const allListings = await Listing.find({});
@@ -46,14 +52,22 @@ app.get("/listings/new",(req,res)=>{
     res.render("listings/new.ejs");
 })
 // create route 
-app.post("/listings",async(req,res)=>{
-    // let {title,description,image,price,location,country} = req.body;
-    // let listing = req.body.listing;
+// app.post("/listings",async(req,res)=>{
+//     // let {title,description,image,price,location,country} = req.body;
+//     // let listing = req.body.listing;
+//     normalizeListingImage(req.body.listing);
+//     const newListing = new Listing(req.body.listing);
+//     await newListing.save();
+//     res.redirect("/listings")
+
+// })
+
+
+app.post("/listings", async (req, res) => {
     const newListing = new Listing(req.body.listing);
     await newListing.save();
-    res.redirect("/listings")
-
-})
+    res.redirect("/listings");
+});
 
 
 // edit Routes
@@ -65,11 +79,19 @@ app.get("/listings/:id/edit",async(req,res)=>{
 
 
 // update Route
-app.put("/listings/:id",async(req,res)=>{
-    let{id} = req.params;
-    await Listing.findByIdAndUpdate(id,{...req.body.listing});
+// app.put("/listings/:id",async(req,res)=>{
+//     let{id} = req.params;
+//     normalizeListingImage(req.body.listing);
+//     await Listing.findByIdAndUpdate(id,{...req.body.listing});
+//     res.redirect(`/listings/${id}`);
+// })
+
+
+app.put("/listings/:id", async (req, res) => {
+    let { id } = req.params;
+    await Listing.findByIdAndUpdate(id, req.body.listing);
     res.redirect(`/listings/${id}`);
-})
+});
 // Delete Route
 app.delete("/listings/:id", async (req, res) => {
     let { id } = req.params;
