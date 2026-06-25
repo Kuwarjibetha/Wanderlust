@@ -1,4 +1,4 @@
-<%- layout("/layouts/boilerplate") %>
+<!-- <%- layout("/layouts/boilerplate") %>
 
     <body>
         <div class="row">
@@ -43,4 +43,59 @@
                 </form>
             </div>
         </div>
-    </body>
+    </body> -->
+
+
+
+
+
+
+
+
+
+
+<%- layout("/layouts/boilerplate") %>
+    <div class="container mt-4" style="max-width: 700px;">
+        <h3 class="fw-bold mb-4">Create a New Listing 🏠</h3>
+
+        <form method="POST" action="/listings" enctype="multipart/form-data">
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Title</label>
+                <input name="listing[title]" placeholder="Enter title" type="text" class="form-control" required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Description</label>
+                <textarea name="listing[description]" class="form-control" rows="4"
+                    placeholder="Describe your property..."></textarea>
+            </div>
+
+            <!-- 👇 Changed from text input to file upload -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Property Image</label>
+                <input type="file" name="listing[image]" class="form-control" accept="image/*" />
+                <small class="text-muted">Upload a photo of your property</small>
+            </div>
+
+            <div class="row">
+                <div class="mb-3 col-md-4">
+                    <label class="form-label fw-semibold">Price / night</label>
+                    <input name="listing[price]" placeholder="₹ Price" type="number" class="form-control" required />
+                </div>
+                <div class="mb-3 col-md-8">
+                    <label class="form-label fw-semibold">Location</label>
+                    <input name="listing[location]" placeholder="City, Area" type="text" class="form-control"
+                        required />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Country</label>
+                <input name="listing[country]" placeholder="Country" type="text" class="form-control" required />
+            </div>
+
+            <button class="btn btn-danger w-100 py-2 mt-2">Create Listing</button>
+
+        </form>
+    </div>

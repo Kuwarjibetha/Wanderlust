@@ -12,9 +12,26 @@ const userSchema = new mongoose.Schema({
     enum: ["guest", "host", "admin"],
     default: "guest",
   },
+  bio: {
+    type: String,
+    default: "",
+  },
+  avatar: {
+    url: {
+      type: String,
+      default: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+    },
+    filename: {
+      type: String,
+      default: "default",
+    },
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
-//  Fix — access the default export correctly
 userSchema.plugin(passportLocalMongoose.default || passportLocalMongoose);
 
 module.exports = mongoose.model("User", userSchema);

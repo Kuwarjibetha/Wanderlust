@@ -1,44 +1,76 @@
-<nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top">
+<nav class="navbar navbar-expand-md bg-white border-bottom sticky-top shadow-sm">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/"><i class="fa-regular fa-compass"></i></a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup">
+        <!-- Logo -->
+        <a class="navbar-brand" href="/">
+            <i class="fa-regular fa-compass"></i>
+        </a>
+
+        <!-- Mobile Toggle Button -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup"
+            aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+        <!-- Navbar Content -->
+        <div class="collapse navbar-collapse mobile-menu" id="navbarNavAltMarkup">
 
-            <!-- Left Side Links -->
+            <!-- Left Links -->
             <div class="navbar-nav">
-                <a class="nav-link" href="/">Home</a>
-                <a class="nav-link" href="/listings">All Listing</a>
 
-                <!-- Only hosts see "Add new Listing" -->
+                <a class="nav-link" href="/">Home</a>
+
+                <a class="nav-link" href="/listings">
+                    All Listings
+                </a>
+
                 <% if (currUser && currUser.role==="host" ) { %>
-                    <a class="nav-link" href="/listings/new">Add new Listing</a>
+                    <a class="nav-link" href="/listings/new">
+                        Add New Listing
+                    </a>
                     <% } %>
 
-                        <!-- Only guests see "My Bookings" -->
                         <% if (currUser && currUser.role==="guest" ) { %>
-                            <a class="nav-link" href="/my-bookings">My Bookings 🧳</a>
+                            <a class="nav-link" href="/my-bookings">
+                                My Bookings 🧳
+                            </a>
                             <% } %>
+
             </div>
 
-            <!-- Right Side Auth Buttons -->
+            <!-- Right Links -->
             <div class="navbar-nav ms-auto">
+
                 <% if (!currUser) { %>
-                    <a class="nav-link" href="/signup">Sign Up</a>
-                    <a class="nav-link" href="/login">Log In</a>
+
+                    <a class="nav-link" href="/signup">
+                        Sign Up
+                    </a>
+
+                    <a class="nav-link" href="/login">
+                        Log In
+                    </a>
+
                     <% } else { %>
-                        <span class="nav-link text-muted">
-                            Hi, <strong>
+
+                        <a class="nav-link" href="/profile">
+                            <img src="<%= currUser.avatar ? currUser.avatar.url : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png' %>"
+                                class="rounded-circle me-1" style="width:28px; height:28px; object-fit:cover;" />
+                            <strong>
                                 <%= currUser.username %>
-                            </strong> 👋
-                        </span>
-                        <a class="nav-link" href="/logout">Log Out</a>
+                            </strong>
+                        </a>
+
+                        <a class="nav-link" href="/logout">
+                            Log Out
+                        </a>
+
                         <% } %>
+
             </div>
 
         </div>
+
     </div>
 </nav>

@@ -1,27 +1,90 @@
 <%- layout("/layouts/boilerplate") %>
+    <div class="container mt-4">
 
-    <body>
-        <h3>All Listings</h3>
-        <!-- <form method="GET" action="/listings/new">
-        <button>Create New Listing</button>
-        </form> -->
-        <div class="row row-cols-lg-3 row-col-md-2 row-col-">
-            <% for(let listing of allListings){ %>
-                <a href="/listings/<%= listing._id %>" class="listing-link">
-                    <div class="card col">
-                        <img src="<%= listing.image %>" class="card-img-top" alt="listing_image"
-                            style="height: 20rem;">
-                        <div class="card-img-overlay">ABCD</div>
-                        <div class="card-body">
-                            <p class="card-text">
-                                <b><%= listing.title %></b><br>
-                                &#8377; <%=listing.price.toLocaleString("en-in") %> /night
-                            </p>
-                        </div>
-                    </div>
-                </a>
+        <!-- Search & Filter Bar -->
+        <form action="/listings" method="GET" class="mb-4">
+            <div class="row g-2 align-items-end">
 
-                <%}%>
-        </div>
+                <!-- Search -->
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">🔍 Search</label>
+                    <input type="text" name="search" class="form-control" placeholder="Search by title or location..."
+                        value="<%= search %>" />
+                </div>
 
-    </body>
+                <!-- Country -->
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">🌍 Country</label>
+                    <input type="text" name="country" class="form-control" placeholder="e.g. India, USA"
+                        value="<%= country %>" />
+                </div>
+
+                <!-- Min Price -->
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">💰 Min ₹</label>
+                    <input type="number" name="minPrice" class="form-control" placeholder="0" value="<%= minPrice %>" />
+                </div>
+
+                <!-- Max Price -->
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold">💰 Max ₹</label>
+                    <input type="number" name="maxPrice" class="form-control" placeholder="10000"
+                        value="<%= maxPrice %>" />
+                </div>
+
+                <!-- Buttons -->
+                <div class="col-md-1 d-flex gap-1">
+                    <button type="submit" class="btn btn-danger w-100">Go</button>
+                </div>
+
+            </div>
+
+            <!-- Clear Filters -->
+            <% if (search || country || minPrice || maxPrice) { %>
+                <div class="mt-2">
+                    <a href="/listings" class="btn btn-sm btn-outline-secondary">
+                        ✕ Clear Filters
+                    </a>
+                    <span class="text-muted ms-2" style="font-size:0.9rem;">
+                        <%= allListings.length %> result<%= allListings.length !==1 ? "s" : "" %> found
+                    </span>
+                </div>
+                <% } %>
+        </form>
+
+        <!-- Listings Grid -->
+        <% if (allListings.length===0) { %>
+            <div class="text-center py-5">
+                <div style="font-size: 4rem;">🔍</div>
+                <h5 class="mt-3">No listings found!</h5>
+                <p class="text-muted">Try different search terms or clear filters.</p>
+                <a href="/listings" class="btn btn-danger px-4">Show All Listings</a>
+            </div>
+            <% } else { %>
+                <div class="row row-cols-lg-3 row-cols-md-2 row-cols-1 g-4 main-card">
+                    <% for(let listing of allListings) { %>
+                        <a href="/listings/<%= listing._id %>" class="listing-link text-decoration-none">
+                            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden">
+                                <img src="<%= listing.image.url %>" class="card-img-top" alt="listing_image"
+                                    style="height: 220px; object-fit: cover;" />
+                                <div class="card-body">
+                                    <p class="card-text mb-1"><b>
+                                            <%= listing.title %>
+                                        </b></p>
+                                    <p class="card-text text-muted" style="font-size: 0.9rem;">
+                                        📍 <%= listing.location %>, <%= listing.country %>
+                                    </p>
+                                    <p class="card-text">
+                                        <span class="text-danger fw-bold">
+                                            &#8377;<%= listing.price.toLocaleString("en-in") %>
+                                        </span>
+                                        <span class="text-muted">/night</span>
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                        <% } %>
+                </div>
+                <% } %>
+
+    </div>

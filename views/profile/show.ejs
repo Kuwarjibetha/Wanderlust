@@ -1,0 +1,124 @@
+<%- layout("/layouts/boilerplate") %>
+<div class="container mt-4" style="max-width: 900px;">
+
+  <!-- Profile Header -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
+    <div class="row align-items-center g-4">
+
+      <!-- Avatar -->
+      <div class="col-md-3 text-center">
+        <img
+          src="<%= user.avatar.url %>"
+          alt="avatar"
+          class="rounded-circle shadow"
+          style="width: 120px; height: 120px; object-fit: cover;"
+        />
+      </div>
+
+      <!-- Info -->
+      <div class="col-md-7">
+        <h3 class="fw-bold mb-1"><%= user.username %></h3>
+        <p class="text-muted mb-1">📧 <%= user.email %></p>
+        <p class="text-muted mb-1">
+          🎭 Role:
+          <span class="badge <%= user.role === 'host' ? 'bg-danger' : 'bg-primary' %>">
+            <%= user.role %>
+          </span>
+        </p>
+        <p class="text-muted mb-2">
+          📅 Joined: <%= user.createdAt.toDateString() %>
+        </p>
+        <% if (user.bio) { %>
+          <p class="mb-0"><%= user.bio %></p>
+        <% } else { %>
+          <p class="text-muted fst-italic mb-0">No bio yet.</p>
+        <% } %>
+      </div>
+
+      <!-- Edit Button -->
+      <div class="col-md-2 text-end">
+        <a href="/profile/edit" class="btn btn-outline-danger btn-sm">
+          ✏️ Edit
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Host: My Listings -->
+  <% if (user.role === "host") { %>
+    <h4 class="fw-bold mb-3">🏠 My Listings</h4>
+    <% if (myListings.length === 0) { %>
+      <div class="alert alert-light border text-center mb-4">
+        No listings yet.
+        <a href="/listings/new" class="text-danger">Create your first listing!</a>
+      </div>
+    <% } else { %>
+      <div class="row g-3 mb-5">
+        <% for (let listing of myListings) { %>
+          <div class="col-md-4">
+            <a href="/listings/<%= listing._id %>" class="text-decoration-none">
+              <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+                <img
+                  src="<%= listing.image.url %>"
+                  class="card-img-top"
+                  style="height: 160px; object-fit: cover;"
+                  alt="listing"
+                />
+                <div class="card-body">
+                  <p class="fw-bold mb-1"><%= listing.title %></p>
+                  <p class="text-muted mb-1" style="font-size:0.85rem;">
+                    📍 <%= listing.location %>
+                  </p>
+                  <p class="text-danger fw-bold mb-0">
+                    &#8377;<%= listing.price.toLocaleString("en-in") %>/night
+                  </p>
+                </div>
+              </div>
+            </a>
+          </div>
+        <% } %>
+      </div>
+    <% } %>
+  <% } %>
+
+  <!-- Guest: My Bookings -->
+  <% if (user.role === "guest") { %>
+    <h4 class="fw-bold mb-3">🧳 My Bookings</h4>
+    <% if (myBookings.length === 0) { %>
+      <div class="alert alert-light border text-center mb-4">
+        No bookings yet.
+        <a href="/listings" class="text-danger">Browse listings!</a>
+      </div>
+    <% } else { %>
+      <div class="row g-3 mb-5">
+        <% for (let booking of myBookings) { %>
+          <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+              <img
+                src="<%= booking.listing.image.url %>"
+                class="card-img-top"
+                style="height: 160px; object-fit: cover;"
+                alt="listing"
+              />
+              <div class="card-body">
+                <h6 class="fw-bold mb-1"><%= booking.listing.title %></h6>
+                <p class="text-muted mb-1" style="font-size:0.85rem;">
+                  📍 <%= booking.listing.location %>
+                </p>
+                <p class="mb-1">
+                  📅 <%= booking.checkIn.toDateString() %> →
+                  <%= booking.checkOut.toDateString() %>
+                </p>
+                <p class="text-danger fw-bold mb-0">
+                  &#8377;<%= booking.totalPrice.toLocaleString("en-in") %>
+                </p>
+              </div>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    <% } %>
+  <% } %>
+
+</div>

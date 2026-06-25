@@ -15,12 +15,18 @@ const LocalStrategy = require("passport-local");
 
 const Listing = require("./models/listing");
 const User = require("./models/user");
-const Booking = require("./models/booking");  // ← ADD THIS
+const Booking = require("./models/booking");
+const Review = require("./models/review");
 const { isLoggedIn, isOwner, isHost, saveRedirectUrl } = require("./middleware");
+const multer = require("multer");
+const { cloudinary, storage } = require("./config/cloudinary");
+const upload = multer({ storage });
+
+
 
 // Data base connection 
 mongoose.connect(process.env.MONGO_URL)
-    .then(() => console.log("✅ connected to db"))
+    .then(() => console.log(" connected to db"))
     .catch(err => console.log(err));
 
 
@@ -56,6 +62,8 @@ app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
+
+
 
 //  Global Locals 
 // These are available in ALL your EJS views
@@ -146,8 +154,35 @@ app.get("/", isLoggedIn, async (req, res) => {
 
 // Index
 app.get("/listings", isLoggedIn, async (req, res) => {
-    const allListings = await Listing.find({});
-    res.render("listings/index.ejs", { allListings });
+    const { search, country, minPrice, maxPrice } = req.query;
+    let filter = {};
+
+    if (search) {
+        filter.$or = [
+            { title: { $regex: search, $options: "i" } },
+            { location: { $regex: search, $options: "i" } },
+        ];
+    }
+
+    if (country) {
+        filter.country = { $regex: country, $options: "i" };
+    }
+
+    if (minPrice || maxPrice) {
+        filter.price = {};
+        if (minPrice) filter.price.$gte = Number(minPrice);
+        if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    const allListings = await Listing.find(filter);
+
+    res.render("listings/index.ejs", {
+        allListings,
+        search: search || "",
+        country: country || "",
+        minPrice: minPrice || "",
+        maxPrice: maxPrice || "",
+    });
 });
 
 
@@ -162,9 +197,18 @@ app.get("/listings/new", isLoggedIn, isHost, (req, res) => {
 
 
 // Create — must be logged in + host only
-app.post("/listings", isLoggedIn, isHost, async (req, res) => {
+app.post("/listings", isLoggedIn, isHost, upload.single("listing[image]"), async (req, res) => {
     const newListing = new Listing(req.body.listing);
     newListing.owner = req.user._id;
+
+    // If image was uploaded
+    if (req.file) {
+        newListing.image = {
+            url: req.file.path,
+            filename: req.file.filename,
+        };
+    }
+
     await newListing.save();
     req.flash("success", "New listing created! 🏠");
     res.redirect("/listings");
@@ -175,7 +219,12 @@ app.post("/listings", isLoggedIn, isHost, async (req, res) => {
 // Show
 app.get("/listings/:id", async (req, res) => {
     let { id } = req.params;
-    const listings = await Listing.findById(id).populate("owner");
+    const listings = await Listing.findById(id)
+        .populate("owner")
+        .populate({
+            path: "reviews",
+            populate: { path: "author" }  // get reviewer's username
+        });
     res.render("listings/show.ejs", { listings });
 });
 
@@ -193,10 +242,24 @@ app.get("/listings/:id/edit", isLoggedIn, isOwner, async (req, res) => {
 
 
 // Update 
-app.put("/listings/:id", isLoggedIn, isOwner, async (req, res) => {
+app.put("/listings/:id", isLoggedIn, isOwner, upload.single("listing[image]"), async (req, res) => {
     let { id } = req.params;
-    await Listing.findByIdAndUpdate(id, req.body.listing);
-    req.flash("success", "Listing updated! ");
+    const listing = await Listing.findByIdAndUpdate(id, req.body.listing);
+
+    // If new image was uploaded
+    if (req.file) {
+        // Delete old image from Cloudinary
+        if (listing.image.filename !== "default") {
+            await cloudinary.uploader.destroy(listing.image.filename);
+        }
+        listing.image = {
+            url: req.file.path,
+            filename: req.file.filename,
+        };
+        await listing.save();
+    }
+
+    req.flash("success", "Listing updated! ✅");
     res.redirect(`/listings/${id}`);
 });
 
@@ -207,6 +270,47 @@ app.delete("/listings/:id", isLoggedIn, isOwner, async (req, res) => {
     req.flash("success", "Listing deleted! 🗑️");
     res.redirect("/listings");
 });
+
+
+
+
+
+//  REVIEW ROUTES
+
+// Create Review — only guests can review
+app.post("/listings/:id/reviews", isLoggedIn, async (req, res) => {
+    const listing = await Listing.findById(req.params.id);
+    const review = new Review({
+        comment: req.body.comment,
+        rating: req.body.rating,
+        author: req.user._id,
+    });
+
+    listing.reviews.push(review);
+    await review.save();
+    await listing.save();
+
+    req.flash("success", "Review added! ⭐");
+    res.redirect(`/listings/${req.params.id}`);
+});
+
+// Delete Review — only review author can delete
+app.delete("/listings/:id/reviews/:reviewId", isLoggedIn, async (req, res) => {
+    const { id, reviewId } = req.params;
+
+    // Remove review from listing's reviews array
+    await Listing.findByIdAndUpdate(id, {
+        $pull: { reviews: reviewId }
+    });
+
+    // Delete the review itself
+    await Review.findByIdAndDelete(reviewId);
+
+    req.flash("success", "Review deleted!");
+    res.redirect(`/listings/${id}`);
+});
+
+
 
 
 
@@ -268,7 +372,11 @@ app.get("/bookings/:id/confirmation", isLoggedIn, async (req, res) => {
 app.get("/my-bookings", isLoggedIn, async (req, res) => {
     const bookings = await Booking.find({ guest: req.user._id })
         .populate("listing");
-    res.render("bookings/index.ejs", { bookings });
+
+    // Filter out bookings where listing was deleted
+    const validBookings = bookings.filter(b => b.listing !== null);
+
+    res.render("bookings/index.ejs", { bookings: validBookings });
 });
 
 // Cancel Booking
@@ -284,7 +392,78 @@ app.delete("/bookings/:id", isLoggedIn, async (req, res) => {
 
 
 
+
+
+
+
+
+//  PROFILE ROUTES
+
+// View Profile
+app.get("/profile", isLoggedIn, async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  // If host → get their listings
+  let myListings = [];
+  if (user.role === "host") {
+    myListings = await Listing.find({ owner: user._id });
+  }
+
+  // If guest → get their bookings
+  let myBookings = [];
+  if (user.role === "guest") {
+    myBookings = await Booking.find({ guest: user._id })
+      .populate("listing");
+    myBookings = myBookings.filter(b => b.listing !== null);
+  }
+
+  res.render("profile/show.ejs", { user, myListings, myBookings });
+});
+
+// Edit Profile Form
+app.get("/profile/edit", isLoggedIn, async (req, res) => {
+  const user = await User.findById(req.user._id);
+  res.render("profile/edit.ejs", { user });
+});
+
+// Update Profile
+app.put("/profile", isLoggedIn, upload.single("avatar"), async (req, res) => {
+  const user = await User.findById(req.user._id);
+
+  // Update bio
+  user.bio = req.body.bio || "";
+
+  // Update avatar if new image uploaded
+  if (req.file) {
+    if (user.avatar.filename !== "default") {
+      await cloudinary.uploader.destroy(user.avatar.filename);
+    }
+    user.avatar = {
+      url:      req.file.path,
+      filename: req.file.filename,
+    };
+  }
+
+  await user.save();
+  req.flash("success", "Profile updated! ✅");
+  res.redirect("/profile");
+});
+
+
+
+
+
+
+
+
+
+
+
 //  Server 
 app.listen(8080, () => {
     console.log("🚀 Wanderlust running on http://localhost:8080");
+});
+
+app.listen(8080, "0.0.0.0", () => {
+    console.log("Server running");
 });
