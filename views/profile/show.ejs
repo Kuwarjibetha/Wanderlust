@@ -47,78 +47,80 @@
 
   <!-- Host: My Listings -->
   <% if (user.role === "host") { %>
-    <h4 class="fw-bold mb-3">🏠 My Listings</h4>
-    <% if (myListings.length === 0) { %>
-      <div class="alert alert-light border text-center mb-4">
-        No listings yet.
-        <a href="/listings/new" class="text-danger">Create your first listing!</a>
-      </div>
-    <% } else { %>
-      <div class="row g-3 mb-5">
-        <% for (let listing of myListings) { %>
-          <div class="col-md-4">
-            <a href="/listings/<%= listing._id %>" class="text-decoration-none">
-              <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
-                <img
-                  src="<%= listing.image.url %>"
-                  class="card-img-top"
-                  style="height: 160px; object-fit: cover;"
-                  alt="listing"
-                />
-                <div class="card-body">
-                  <p class="fw-bold mb-1"><%= listing.title %></p>
-                  <p class="text-muted mb-1" style="font-size:0.85rem;">
-                    📍 <%= listing.location %>
-                  </p>
-                  <p class="text-danger fw-bold mb-0">
-                    &#8377;<%= listing.price.toLocaleString("en-in") %>/night
-                  </p>
-                </div>
-              </div>
-            </a>
-          </div>
-        <% } %>
-      </div>
-    <% } %>
-  <% } %>
 
-  <!-- Guest: My Bookings -->
-  <% if (user.role === "guest") { %>
-    <h4 class="fw-bold mb-3">🧳 My Bookings</h4>
-    <% if (myBookings.length === 0) { %>
-      <div class="alert alert-light border text-center mb-4">
-        No bookings yet.
-        <a href="/listings" class="text-danger">Browse listings!</a>
-      </div>
-    <% } else { %>
-      <div class="row g-3 mb-5">
-        <% for (let booking of myBookings) { %>
-          <div class="col-md-6">
-            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-              <img
-                src="<%= booking.listing.image.url %>"
-                class="card-img-top"
-                style="height: 160px; object-fit: cover;"
-                alt="listing"
-              />
+  <!-- My Listings -->
+  <h4 class="fw-bold mb-3">🏠 My Listings</h4>
+  <% if (myListings.length === 0) { %>
+    <div class="alert alert-light border text-center mb-4">
+      No listings yet.
+      <a href="/listings/new" class="text-danger">Create your first listing!</a>
+    </div>
+  <% } else { %>
+    <div class="row g-3 mb-5">
+      <% for (let listing of myListings) { %>
+        <div class="col-md-4">
+          <a href="/listings/<%= listing._id %>" class="text-decoration-none">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden h-100">
+              <img src="<%= listing.image.url %>"
+                   class="card-img-top"
+                   style="height: 160px; object-fit: cover;" />
               <div class="card-body">
-                <h6 class="fw-bold mb-1"><%= booking.listing.title %></h6>
+                <p class="fw-bold mb-1"><%= listing.title %></p>
                 <p class="text-muted mb-1" style="font-size:0.85rem;">
-                  📍 <%= booking.listing.location %>
-                </p>
-                <p class="mb-1">
-                  📅 <%= booking.checkIn.toDateString() %> →
-                  <%= booking.checkOut.toDateString() %>
+                  📍 <%= listing.location %>
                 </p>
                 <p class="text-danger fw-bold mb-0">
-                  &#8377;<%= booking.totalPrice.toLocaleString("en-in") %>
+                  &#8377;<%= listing.price.toLocaleString("en-in") %>/night
                 </p>
               </div>
             </div>
-          </div>
-        <% } %>
-      </div>
-    <% } %>
+          </a>
+        </div>
+      <% } %>
+    </div>
   <% } %>
 
-</div>
+  <!-- Received Bookings -->
+  <h4 class="fw-bold mb-3">📋 Bookings on My Properties</h4>
+  <% if (receivedBookings.length === 0) { %>
+    <div class="alert alert-light border text-center mb-4">
+      No bookings received yet.
+    </div>
+  <% } else { %>
+    <div class="table-responsive mb-5">
+      <table class="table table-bordered align-middle">
+        <thead class="table-danger">
+          <tr>
+            <th>🏠 Property</th>
+            <th>👤 Guest</th>
+            <th>📞 Phone</th>
+            <th>📅 Check-in</th>
+            <th>📅 Check-out</th>
+            <th>👥 Guests</th>
+            <th>💰 Total</th>
+            <th>📌 Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% for (let booking of receivedBookings) { %>
+            <tr>
+              <td><b><%= booking.listing.title %></b></td>
+              <td><%= booking.guestName %></td>
+              <td><%= booking.guestPhone %></td>
+              <td><%= booking.checkIn.toDateString() %></td>
+              <td><%= booking.checkOut.toDateString() %></td>
+              <td><%= booking.guests %></td>
+              <td class="text-danger fw-bold">
+                &#8377;<%= booking.totalPrice.toLocaleString("en-in") %>
+              </td>
+              <td>
+                <span class="badge bg-success"><%= booking.status %></span>
+              </td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  <% } %>
+
+<% } %>

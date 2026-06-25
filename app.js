@@ -145,8 +145,35 @@ app.get("/logout", (req, res, next) => {
 
 // Home
 app.get("/", isLoggedIn, async (req, res) => {
-    const allListings = await Listing.find({});
-    res.render("listings/index.ejs", { allListings });
+    const { search, country, minPrice, maxPrice } = req.query;
+    let filter = {};
+
+    if (search) {
+        filter.$or = [
+            { title: { $regex: search, $options: "i" } },
+            { location: { $regex: search, $options: "i" } },
+        ];
+    }
+
+    if (country) {
+        filter.country = { $regex: country, $options: "i" };
+    }
+
+    if (minPrice || maxPrice) {
+        filter.price = {};
+        if (minPrice) filter.price.$gte = Number(minPrice);
+        if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    const allListings = await Listing.find(filter);
+
+    res.render("listings/index.ejs", {
+        allListings,
+        search: search || "",
+        country: country || "",
+        minPrice: minPrice || "",
+        maxPrice: maxPrice || "",
+    });
 });
 
 
@@ -210,7 +237,7 @@ app.post("/listings", isLoggedIn, isHost, upload.single("listing[image]"), async
     }
 
     await newListing.save();
-    req.flash("success", "New listing created! 🏠");
+    req.flash("success", "New listing created");
     res.redirect("/listings");
 });
 
@@ -259,7 +286,7 @@ app.put("/listings/:id", isLoggedIn, isOwner, upload.single("listing[image]"), a
         await listing.save();
     }
 
-    req.flash("success", "Listing updated! ✅");
+    req.flash("success", "Listing updated");
     res.redirect(`/listings/${id}`);
 });
 
@@ -327,17 +354,15 @@ app.get("/listings/:id/book", isLoggedIn, async (req, res) => {
 
 // Create Booking
 app.post("/listings/:id/book", isLoggedIn, async (req, res) => {
-    const listing = await Listing.findById(req.params.id);
-    const { checkIn, checkOut, guests } = req.body;
+    const listing = await Listing.findById(req.params.id).populate("owner");
+    const { checkIn, checkOut, guests, guestName, guestPhone, guestEmail } = req.body;
 
-    // Calculate total price
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
     const nights = Math.ceil(
         (checkOutDate - checkInDate) / (1000 * 60 * 60 * 24)
     );
 
-    // Validate dates
     if (nights <= 0) {
         req.flash("error", "Check-out must be after check-in date!");
         return res.redirect(`/listings/${req.params.id}/book`);
@@ -348,6 +373,9 @@ app.post("/listings/:id/book", isLoggedIn, async (req, res) => {
     const booking = new Booking({
         listing: listing._id,
         guest: req.user._id,
+        guestName: guestName,
+        guestPhone: guestPhone,
+        guestEmail: guestEmail || "",
         checkIn: checkInDate,
         checkOut: checkOutDate,
         guests: guests,
@@ -355,8 +383,7 @@ app.post("/listings/:id/book", isLoggedIn, async (req, res) => {
     });
 
     await booking.save();
-
-    // Redirect to confirmation page
+    req.flash("success", "Booking confirmed");
     res.redirect(`/bookings/${booking._id}/confirmation`);
 });
 
@@ -397,56 +424,72 @@ app.delete("/bookings/:id", isLoggedIn, async (req, res) => {
 
 
 
+
+
+
 //  PROFILE ROUTES
 
 // View Profile
 app.get("/profile", isLoggedIn, async (req, res) => {
-  const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id);
 
-  // If host → get their listings
-  let myListings = [];
-  if (user.role === "host") {
-    myListings = await Listing.find({ owner: user._id });
-  }
+    let myListings = [];
+    let myBookings = [];
+    let receivedBookings = [];  // bookings on host's listings
 
-  // If guest → get their bookings
-  let myBookings = [];
-  if (user.role === "guest") {
-    myBookings = await Booking.find({ guest: user._id })
-      .populate("listing");
-    myBookings = myBookings.filter(b => b.listing !== null);
-  }
+    if (user.role === "host") {
+        myListings = await Listing.find({ owner: user._id });
 
-  res.render("profile/show.ejs", { user, myListings, myBookings });
+        
+        receivedBookings = await Booking.find({
+            listing: { $in: myListings.map(l => l._id) }
+        })
+            .populate("listing")
+            .populate("guest")
+            .sort({ bookedAt: -1 });  // newest first
+    }
+
+    if (user.role === "guest") {
+        myBookings = await Booking.find({ guest: user._id })
+            .populate("listing");
+        myBookings = myBookings.filter(b => b.listing !== null);
+    }
+
+    res.render("profile/show.ejs", {
+        user,
+        myListings,
+        myBookings,
+        receivedBookings,
+    });
 });
 
 // Edit Profile Form
 app.get("/profile/edit", isLoggedIn, async (req, res) => {
-  const user = await User.findById(req.user._id);
-  res.render("profile/edit.ejs", { user });
+    const user = await User.findById(req.user._id);
+    res.render("profile/edit.ejs", { user });
 });
 
 // Update Profile
 app.put("/profile", isLoggedIn, upload.single("avatar"), async (req, res) => {
-  const user = await User.findById(req.user._id);
+    const user = await User.findById(req.user._id);
 
-  // Update bio
-  user.bio = req.body.bio || "";
+    // Update bio
+    user.bio = req.body.bio || "";
 
-  // Update avatar if new image uploaded
-  if (req.file) {
-    if (user.avatar.filename !== "default") {
-      await cloudinary.uploader.destroy(user.avatar.filename);
+    // Update avatar if new image uploaded
+    if (req.file) {
+        if (user.avatar.filename !== "default") {
+            await cloudinary.uploader.destroy(user.avatar.filename);
+        }
+        user.avatar = {
+            url: req.file.path,
+            filename: req.file.filename,
+        };
     }
-    user.avatar = {
-      url:      req.file.path,
-      filename: req.file.filename,
-    };
-  }
 
-  await user.save();
-  req.flash("success", "Profile updated! ✅");
-  res.redirect("/profile");
+    await user.save();
+    req.flash("success", "Profile updated! ");
+    res.redirect("/profile");
 });
 
 
@@ -459,11 +502,13 @@ app.put("/profile", isLoggedIn, upload.single("avatar"), async (req, res) => {
 
 
 
-//  Server 
+//  Server  hai
 app.listen(8080, () => {
-    console.log("🚀 Wanderlust running on http://localhost:8080");
+    console.log(" Wanderlust running on http://localhost:8080");
 });
 
+
+// ip server 
 app.listen(8080, "0.0.0.0", () => {
     console.log("Server running");
 });

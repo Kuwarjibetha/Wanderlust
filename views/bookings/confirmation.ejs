@@ -1,69 +1,125 @@
 <%- layout("/layouts/boilerplate") %>
-  <div class="row mt-4 justify-content-center container-book">
-    <div class="col-md-6">
-      <div class="card shadow text-center p-4">
-        <div style="font-size: 4rem;">🎉</div>
-        <h3 class="text-success mt-2">Booking Confirmed!</h3>
-        <p class="text-muted">Your stay has been successfully booked.</p>
-        <hr>
+  <div class="container mt-4" style="max-width: 700px;">
+    <div class="card border-0 shadow rounded-4 overflow-hidden">
 
-        <div class="text-start">
-          <h5>📋 Booking Details</h5>
-          <table class="table table-bordered">
-            <tr>
-              <td><b>🏠 Property</b></td>
-              <td>
-                <%= booking.listing.title %>
-              </td>
-            </tr>
-            <tr>
-              <td><b>📍 Location</b></td>
-              <td>
-                <%= booking.listing.location %>, <%= booking.listing.country %>
-              </td>
-            </tr>
-            <tr>
-              <td><b>📅 Check-in</b></td>
-              <td>
-                <%= booking.checkIn.toDateString() %>
-              </td>
-            </tr>
-            <tr>
-              <td><b>📅 Check-out</b></td>
-              <td>
-                <%= booking.checkOut.toDateString() %>
-              </td>
-            </tr>
-            <tr>
-              <td><b>🌙 Nights</b></td>
-              <td>
-                <%= Math.ceil((booking.checkOut - booking.checkIn) / (1000 * 60 * 60 * 24)) %>
-              </td>
-            </tr>
-            <tr>
-              <td><b>👥 Guests</b></td>
-              <td>
-                <%= booking.guests %>
-              </td>
-            </tr>
-            <tr class="table-success">
-              <td><b> Total Price</b></td>
-              <td><b>&#8377;<%= booking.totalPrice.toLocaleString("en-in") %></b></td>
-            </tr>
-            <tr>
-              <td><b>📌 Status</b></td>
-              <td>
-                <span class="badge bg-success">
-                  <%= booking.status %>
-                </span>
-              </td>
-            </tr>
-          </table>
+      <!-- Header -->
+      <div class="bg-danger text-white text-center p-4">
+        <div style="font-size: 3rem;">🎉</div>
+        <h3 class="fw-bold mt-2">Booking Confirmed!</h3>
+        <p class="mb-0">Your stay has been successfully booked.</p>
+      </div>
+
+      <div class="card-body p-4">
+
+        <!-- Listing Info -->
+        <div class="d-flex gap-3 mb-4 align-items-center">
+          <img src="<%= booking.listing.image.url %>" class="rounded-3"
+            style="width: 100px; height: 80px; object-fit: cover;" />
+          <div>
+            <h5 class="fw-bold mb-1">
+              <%= booking.listing.title %>
+            </h5>
+            <p class="text-muted mb-0">
+              📍 <%= booking.listing.location %>, <%= booking.listing.country %>
+            </p>
+          </div>
         </div>
 
-        <div class="d-flex gap-2 justify-content-center mt-3">
-          <a href="/my-bookings" class="btn btn-dark">My Bookings</a>
-          <a href="/listings" class="btn btn-outline-dark">Browse More</a>
+        <hr>
+
+        <!-- Guest Details -->
+        <h6 class="fw-bold mb-3">👤 Guest Details</h6>
+        <div class="row g-2 mb-4">
+          <div class="col-md-6">
+            <div class="border rounded-3 p-3">
+              <small class="text-muted">Full Name</small>
+              <p class="fw-bold mb-0">
+                <%= booking.guestName %>
+              </p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="border rounded-3 p-3">
+              <small class="text-muted">Phone</small>
+              <p class="fw-bold mb-0">
+                <%= booking.guestPhone %>
+              </p>
+            </div>
+          </div>
+          <% if (booking.guestEmail) { %>
+            <div class="col-12">
+              <div class="border rounded-3 p-3">
+                <small class="text-muted">Email</small>
+                <p class="fw-bold mb-0">
+                  <%= booking.guestEmail %>
+                </p>
+              </div>
+            </div>
+            <% } %>
+        </div>
+
+        <hr>
+
+        <!-- Booking Details -->
+        <h6 class="fw-bold mb-3">📋 Booking Details</h6>
+        <div class="row g-2 mb-4">
+          <div class="col-md-6">
+            <div class="border rounded-3 p-3">
+              <small class="text-muted">📅 Check-in</small>
+              <p class="fw-bold mb-0">
+                <%= booking.checkIn.toDateString() %>
+              </p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="border rounded-3 p-3">
+              <small class="text-muted">📅 Check-out</small>
+              <p class="fw-bold mb-0">
+                <%= booking.checkOut.toDateString() %>
+              </p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="border rounded-3 p-3">
+              <small class="text-muted">🌙 Nights</small>
+              <p class="fw-bold mb-0">
+                <%= Math.ceil((booking.checkOut - booking.checkIn) / (1000 * 60 * 60 * 24)) %>
+              </p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="border rounded-3 p-3">
+              <small class="text-muted">👥 Guests</small>
+              <p class="fw-bold mb-0">
+                <%= booking.guests %>
+              </p>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="border rounded-3 p-3 bg-danger bg-opacity-10">
+              <small class="text-muted">💰 Total</small>
+              <p class="fw-bold text-danger mb-0">
+                &#8377;<%= booking.totalPrice.toLocaleString("en-in") %>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="text-center mb-4">
+          <span class="badge bg-success fs-6 px-4 py-2">
+            ✅ <%= booking.status.toUpperCase() %>
+          </span>
+        </div>
+
+        <!-- Buttons -->
+        <div class="d-flex gap-2">
+          <a href="/my-bookings" class="btn btn-danger w-100 py-2">
+            My Bookings
+          </a>
+          <a href="/listings" class="btn btn-outline-secondary w-100 py-2">
+            Browse More
+          </a>
         </div>
 
       </div>

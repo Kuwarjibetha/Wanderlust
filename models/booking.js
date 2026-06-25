@@ -11,6 +11,21 @@ const bookingSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+
+  // 👇 NEW — Guest contact details
+  guestName: {
+    type: String,
+    required: true,
+  },
+  guestPhone: {
+    type: String,
+    required: true,
+  },
+  guestEmail: {
+    type: String,
+    default: "",
+  },
+
   checkIn: {
     type: Date,
     required: true,

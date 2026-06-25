@@ -1,79 +1,144 @@
 <%- layout("/layouts/boilerplate") %>
-    <div class="row mt-4 justify-content-center">
-        <div class="col-md-6 book-sta">
-            <div class="card shadow book-card-sta">
-                <img src="<%= listing.image.url %>" class="card-img-top" style="height: 200px; object-fit: cover;"
-                    alt="listing">
-                <div class="card-body">
-                    <h4 class="card-title">Book: <%= listing.title %>
-                    </h4>
-                    <p class="text-muted">
-                        📍 <%= listing.location %>, <%= listing.country %> &nbsp;|&nbsp;
-                                &#8377; <%= listing.price.toLocaleString("en-in") %> / night
-                    </p>
-                    <hr>
+<div class="row mt-4 justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow rounded-4 overflow-hidden">
 
-                    <form action="/listings/<%= listing._id %>/book" method="POST">
-                        <!-- Check-in -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">📅 Check-in Date</label>
-                            <input type="date" name="checkIn" class="form-control"
-                                min="<%= new Date().toISOString().split('T')[0] %>" required />
-                        </div>
+      <!-- Listing Image & Info -->
+      <img src="<%= listing.image.url %>" class="card-img-top"
+           style="height: 200px; object-fit: cover;" alt="listing">
+      <div class="card-body">
+        <h4 class="fw-bold"><%= listing.title %></h4>
+        <p class="text-muted">
+          📍 <%= listing.location %>, <%= listing.country %> &nbsp;|&nbsp;
+          <span class="text-danger fw-bold">
+            &#8377;<%= listing.price.toLocaleString("en-in") %>
+          </span> / night
+        </p>
+        <hr>
 
-                        <!-- Check-out -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">📅 Check-out Date</label>
-                            <input type="date" name="checkOut" class="form-control"
-                                min="<%= new Date().toISOString().split('T')[0] %>" required />
-                        </div>
+        <form action="/listings/<%= listing._id %>/book" method="POST">
 
-                        <!-- Guests -->
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">👥 Number of Guests</label>
-                            <input type="number" name="guests" class="form-control" min="1" max="20" value="1"
-                                required />
-                        </div>
+          <!-- Guest Details -->
+          <h6 class="fw-bold mb-3">👤 Your Details</h6>
 
-                        <!-- Price Preview -->
-                        <div class="alert alert-info" id="pricePreview">
-                            Select dates to see total price
-                        </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Full Name <span class="text-danger">*</span></label>
+            <input
+              type="text"
+              name="guestName"
+              class="form-control"
+              placeholder="Enter your full name"
+              required
+            />
+          </div>
 
-                        <button class="btn btn-danger w-100">Confirm Booking</button>
-                    </form>
-                </div>
-            </div>
-        </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Phone Number <span class="text-danger">*</span></label>
+            <input
+              type="tel"
+              name="guestPhone"
+              class="form-control"
+              placeholder="Enter your phone number"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">
+              Email
+              <span class="text-muted fw-normal">(optional)</span>
+            </label>
+            <input
+              type="email"
+              name="guestEmail"
+              class="form-control"
+              placeholder="Enter your email"
+              value="<%= currUser.email || '' %>"
+            />
+          </div>
+
+          <hr>
+
+          <!-- Booking Dates -->
+          <h6 class="fw-bold mb-3">📅 Booking Details</h6>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Check-in Date</label>
+            <input
+              type="date"
+              name="checkIn"
+              class="form-control"
+              min="<%= new Date().toISOString().split('T')[0] %>"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Check-out Date</label>
+            <input
+              type="date"
+              name="checkOut"
+              class="form-control"
+              min="<%= new Date().toISOString().split('T')[0] %>"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Number of Guests</label>
+            <input
+              type="number"
+              name="guests"
+              class="form-control"
+              min="1"
+              max="20"
+              value="1"
+              required
+            />
+          </div>
+
+          <!-- Price Preview -->
+          <div class="alert alert-info" id="pricePreview">
+            Select dates to see total price
+          </div>
+
+          <button class="btn btn-danger w-100 py-2 fw-bold">
+            Confirm Booking 🏨
+          </button>
+
+        </form>
+      </div>
     </div>
+  </div>
+</div>
 
-    <!-- Auto calculate price -->
-    <script>
-        let listingPrice = Number("<%= listing.price %>");
-        let checkInInput = document.querySelector("input[name='checkIn']");
-        let checkOutInput = document.querySelector("input[name='checkOut']");
-        let preview = document.getElementById("pricePreview");
+<!-- Auto calculate price -->
+<script>
+  let listingPrice  = Number("<%= listing.price %>");
+  let checkInInput  = document.querySelector("input[name='checkIn']");
+  let checkOutInput = document.querySelector("input[name='checkOut']");
+  let preview       = document.getElementById("pricePreview");
 
-        function calculatePrice() {
-            if (checkInInput.value && checkOutInput.value) {
-                const nights = Math.ceil(
-                    (new Date(checkOutInput.value) - new Date(checkInInput.value)) / (1000 * 60 * 60 * 24)
-                );
-                if (nights > 0) {
-                    const total = nights * listingPrice;
-                    preview.innerHTML = `
-          🌙 <b>${nights} night${nights > 1 ? "s" : ""}</b> × 
-          &#8377;${listingPrice.toLocaleString("en-in")} = 
+  function calculatePrice() {
+    if (checkInInput.value && checkOutInput.value) {
+      const nights = Math.ceil(
+        (new Date(checkOutInput.value) - new Date(checkInInput.value)) / (1000 * 60 * 60 * 24)
+      );
+      if (nights > 0) {
+        const total = nights * listingPrice;
+        preview.innerHTML = `
+          🌙 <b>${nights} night${nights > 1 ? "s" : ""}</b> ×
+          &#8377;${listingPrice.toLocaleString("en-in")} =
           <b>&#8377;${total.toLocaleString("en-in")}</b>
         `;
-                    preview.className = "alert alert-success";
-                } else {
-                    preview.innerHTML = " Check-out must be after check-in!";
-                    preview.className = "alert alert-danger";
-                }
-            }
-        }
+        preview.className = "alert alert-success";
+      } else {
+        preview.innerHTML = "❌ Check-out must be after check-in!";
+        preview.className = "alert alert-danger";
+      }
+    }
+  }
 
-        checkInInput.addEventListener("change", calculatePrice);
-        checkOutInput.addEventListener("change", calculatePrice);
-    </script>
+  checkInInput.addEventListener("change", calculatePrice);
+  checkOutInput.addEventListener("change", calculatePrice);
+</script>
