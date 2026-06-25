@@ -1,6 +1,6 @@
 <%- layout("/layouts/boilerplate") %>
 <div class="container mt-4" style="max-width: 600px;">
-  <h3 class="fw-bold mb-4">Edit Profile ✏️</h3>
+  <h3 class="fw-bold mb-4">Edit Profile</h3>
 
   <form action="/profile?_method=PUT" method="POST" enctype="multipart/form-data">
 
@@ -38,12 +38,12 @@
     <!-- Info (read only) -->
     <div class="mb-3">
       <label class="form-label fw-semibold">Username</label>
-      <input type="text" class="form-control" value="<%= user.username %>" disabled />
+      <input type="text" class="form-control" value="<%= user.username %>" disabled/>
     </div>
 
     <div class="mb-3">
       <label class="form-label fw-semibold">Email</label>
-      <input type="text" class="form-control" value="<%= user.email %>" disabled />
+      <input type="text" class="form-control" value="<%= user.email %>" />
     </div>
 
     <div class="mb-3">
