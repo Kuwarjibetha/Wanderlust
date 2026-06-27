@@ -1,6 +1,6 @@
 # Wanderlust - Hotel Booking App
 
-Wanderlust is a full-stack hotel and vacation rental booking application built with Node.js, Express, MongoDB, and EJS. Users can browse stays, create accounts, manage listings as hosts, book properties as guests, write reviews, save wishlist items, and receive booking email notifications.
+Wanderlust is a full-stack hotel and vacation rental booking application built with Node.js, Express, MongoDB, and EJS. Users can browse stays, create accounts, manage listings as hosts, book properties as guests, write reviews, save wishlist items, and receive booking and cancellation email notifications.
 
 ## Features
 
@@ -8,14 +8,18 @@ Wanderlust is a full-stack hotel and vacation rental booking application built w
 - Guest and host roles
 - Host-only listing creation and management
 - Listing image uploads with Cloudinary
+- Listing capacity limits and nearby-place details
 - Search and filtering by title, location, country, and price range
 - Listing detail pages with reviews
-- Booking flow with check-in, check-out, guest count, and total price calculation
+- Booking flow with check-in, check-out, guest count, travel type, and total price calculation
+- Guest-count validation against each listing's maximum capacity
 - Guest booking confirmation page and "My Bookings" page
+- Booking cancellation with email notifications
+- Host dashboard with listing, booking, revenue, guest, and recent booking stats
 - Host profile page with received bookings
 - User profile editing with avatar upload and bio
 - Wishlist add/remove support
-- Email notifications for guests and hosts using Nodemailer
+- Booking and cancellation email notifications for guests and hosts using Nodemailer
 
 ## Tech Stack
 
@@ -105,7 +109,7 @@ Wanderlust is a full-stack hotel and vacation rental booking application built w
 
 | Method | Route | Description |
 | --- | --- | --- |
-| GET | `/` | Show listings |
+| GET | `/` | Show guest listings or host dashboard based on user role |
 | GET | `/listings` | Show listings with optional filters |
 | GET | `/listings/new` | Show new listing form for hosts |
 | POST | `/listings` | Create a listing |
@@ -126,10 +130,16 @@ Wanderlust is a full-stack hotel and vacation rental booking application built w
 | Method | Route | Description |
 | --- | --- | --- |
 | GET | `/listings/:id/book` | Show booking form |
-| POST | `/listings/:id/book` | Create a booking |
+| POST | `/listings/:id/book` | Create a booking with guest details and travel type |
 | GET | `/bookings/:id/confirmation` | Show booking confirmation |
 | GET | `/my-bookings` | Show current user's bookings |
-| DELETE | `/bookings/:id` | Cancel a booking |
+| DELETE | `/bookings/:id` | Cancel a booking and send cancellation emails |
+
+### Dashboard
+
+| Method | Route | Description |
+| --- | --- | --- |
+| GET | `/` | Hosts see dashboard stats after login |
 
 ### Profile and Wishlist
 
@@ -168,6 +178,7 @@ MAJORPROJECT/
 └── views/
     ├── auth/
     ├── bookings/
+    ├── dashboard/
     ├── includes/
     ├── layouts/
     ├── listings/
@@ -178,14 +189,14 @@ MAJORPROJECT/
 ## Data Models
 
 - User: email, role, bio, avatar, wishlist, authentication fields
-- Listing: title, description, image, price, location, country, owner, reviews
+- Listing: title, description, image, price, location, country, nearby place, maximum persons, owner, reviews
 - Review: comment, rating, author, created date
-- Booking: listing, guest, guest contact details, dates, guest count, total price, status
+- Booking: listing, guest, guest contact details, dates, guest count, travel type, total price, status
 
 ## Roles
 
 - Guest: can browse listings, book stays, review listings, manage profile, and save wishlist items.
-- Host: can create listings, edit/delete owned listings, manage profile, and view bookings received for their properties.
+- Host: can access the dashboard, create listings, edit/delete owned listings, manage profile, and view bookings received for their properties.
 - Admin: supported in the user role enum, but signup prevents creating admin accounts directly from the public form.
 
 ## Deployment
