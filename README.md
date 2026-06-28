@@ -7,6 +7,8 @@ Wanderlust is a full-stack hotel and vacation rental booking application built w
 - User signup, login, logout, sessions, and flash messages
 - Guest and host roles
 - Guest welcome page with hero search, quick country links, and call-to-action sections
+- Gemini AI-powered listing description generation for hosts
+- Gemini AI review summaries, trip planner, and listing chatbot for guests
 - Host-only listing creation and management
 - Listing image uploads with Cloudinary
 - Listing capacity limits and nearby-place details
@@ -30,6 +32,7 @@ Wanderlust is a full-stack hotel and vacation rental booking application built w
 - Views: EJS, ejs-mate
 - Uploads: Multer, Cloudinary, multer-storage-cloudinary
 - Email: Nodemailer with Gmail
+- AI: Google Gemini through `@google/generative-ai`
 - Utilities: dotenv, connect-flash, express-session, method-override
 
 ## Prerequisites
@@ -39,6 +42,7 @@ Wanderlust is a full-stack hotel and vacation rental booking application built w
 - MongoDB Atlas or a local MongoDB instance
 - Cloudinary account
 - Gmail app password for email notifications
+- Gemini API key for AI features
 
 ## Installation
 
@@ -67,6 +71,8 @@ Wanderlust is a full-stack hotel and vacation rental booking application built w
 
    GMAIL_USER=<your-gmail-address>
    GMAIL_PASS=<your-gmail-app-password>
+
+   GEMINI_API_KEY=<your-gemini-api-key>
    ```
 
 4. Start the app.
@@ -141,6 +147,15 @@ Wanderlust is a full-stack hotel and vacation rental booking application built w
 | GET | `/my-bookings` | Show current user's bookings |
 | DELETE | `/bookings/:id` | Cancel a booking and send cancellation emails |
 
+### AI
+
+| Method | Route | Description |
+| --- | --- | --- |
+| POST | `/ai/generate-description` | Generate a listing description with Gemini |
+| GET | `/listings/:id/summarize-reviews` | Summarize reviews for a listing |
+| POST | `/listings/:id/trip-planner` | Generate a day-by-day trip itinerary |
+| POST | `/listings/:id/chat` | Chat with an AI assistant about a listing |
+
 ### Dashboard
 
 | Method | Route | Description |
@@ -180,6 +195,8 @@ MAJORPROJECT/
 │   └── user.js
 ├── public/
 │   └── css/
+│       ├── js/
+│       │   └── ai.js
 │       └── style.css
 └── views/
     ├── auth/
@@ -219,9 +236,11 @@ Before deploying, add the required environment variables in your hosting provide
 - `CLOUD_API_SECRET`
 - `GMAIL_USER`
 - `GMAIL_PASS`
+- `GEMINI_API_KEY`
 
 ## Notes
 
 - Uploaded listing images and profile avatars are stored in Cloudinary.
 - Booking emails are sent only when valid email credentials are configured.
+- AI features require `GEMINI_API_KEY` and use the `gemini-2.5-flash` model.
 - The app uses `_method` query/body overrides for PUT and DELETE requests from forms.
