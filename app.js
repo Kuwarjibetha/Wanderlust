@@ -102,7 +102,7 @@ app.post("/signup", async (req, res, next) => {
         req.login(registeredUser, (err) => {
             if (err) return next(err);
             req.flash("success", `Welcome to Wanderlust, ${username}! 🏠`);
-            res.redirect("/listings");
+            res.redirect("/");
         });
     } catch (e) {
         req.flash("error", e.message);
@@ -118,16 +118,10 @@ app.get("/login", (req, res) => {
     res.render("auth/login");
 });
 
-app.post("/login",
-    saveRedirectUrl,
-    passport.authenticate("local", {
-        failureRedirect: "/login",
-        failureFlash: true,
-    }),
+app.post("/login", saveRedirectUrl, passport.authenticate("local", { failureRedirect: "/login", failureFlash: true, }),
     (req, res) => {
         req.flash("success", `Welcome back, ${req.user.username}! 👋`);
-        const redirectUrl = res.locals.redirectUrl || "/listings";
-        res.redirect(redirectUrl);
+        res.redirect("/");
     }
 );
 
@@ -155,13 +149,10 @@ app.get("/logout", (req, res, next) => {
 app.get("/", isLoggedIn, async (req, res) => {
 
     // If guest user → show listings page
+    // If guest user → show welcome page
     if (req.user.role === "guest") {
-        const allListings = await Listing.find({});
-        return res.render("listings/index.ejs", {
-            allListings, search: "", country: "", minPrice: "", maxPrice: "",
-        });
+        return res.render("welcome/index.ejs");
     }
-
     // If host user → show dashboard
 
     // Step 1: Get all my listings

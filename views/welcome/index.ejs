@@ -1,0 +1,162 @@
+<%- layout("/layouts/boilerplate") %>
+
+<!-- Hero Section -->
+<div  class="home-up">
+  <div class="container">
+    <div class="row align-items-center g-5">
+
+      <!-- Left: Text Content -->
+      <div class="col-lg-6">
+        <span class="badge rounded-pill px-3 py-2 mb-3"
+              style="background:#fff0f0; color:#e74c3c; font-size:0.85rem; border: 1px solid #ffcccc;">
+          🏠 #1 Vacation Rental Platform
+        </span>
+
+        <h1 class="fw-bold mb-3"
+            style="font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.2; color: #2d3436;">
+          Find Your Perfect
+          <span style="color: #e74c3c;">Dream Stay</span>
+          Anywhere in the World
+        </h1>
+
+        <p class="text-muted mb-4" style="font-size: 1.1rem; line-height: 1.7;">
+          Discover unique homes, cozy cottages, luxury villas and more.
+          Book your perfect getaway with just a few clicks!
+        </p>
+
+        <!-- Search Bar -->
+        <form action="/listings" method="GET" class="mb-4">
+          <div class="d-flex gap-2 flex-wrap">
+            <input
+              type="text"
+              name="search"
+              class="form-control rounded-3 shadow-sm"
+              placeholder="🔍 Where do you want to go?"
+              style="height: 52px; font-size: 1rem; border: 2px solid #f0f0f0; flex: 1; min-width: 200px;"
+            />
+            <button type="submit"
+                    class="btn btn-danger px-4 rounded-3 fw-bold shadow-sm"
+                    style="height: 52px; white-space: nowrap;">
+              Search 🔍
+            </button>
+          </div>
+        </form>
+
+        <!-- Quick Links -->
+        <div class="d-flex gap-2 flex-wrap mb-4">
+          <a href="/listings?country=india"
+             class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+            🇮🇳 India
+          </a>
+          <a href="/listings?country=united states"
+             class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+            🇺🇸 USA
+          </a>
+          <a href="/listings?country=italy"
+             class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+            🇮🇹 Italy
+          </a>
+          <a href="/listings?country=japan"
+             class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+            🇯🇵 Japan
+          </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="d-flex gap-4 flex-wrap">
+          <div>
+            <h4 class="fw-bold mb-0" style="color:#e74c3c;">500+</h4>
+            <small class="text-muted">Properties</small>
+          </div>
+          <div style="border-left: 2px solid #eee; padding-left: 1.5rem;">
+            <h4 class="fw-bold mb-0" style="color:#e74c3c;">1000+</h4>
+            <small class="text-muted">Happy Guests</small>
+          </div>
+          <div style="border-left: 2px solid #eee; padding-left: 1.5rem;">
+            <h4 class="fw-bold mb-0" style="color:#e74c3c;">50+</h4>
+            <small class="text-muted">Countries</small>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right: Image Grid -->
+      <div class="col-lg-6 d-none d-lg-block">
+        <div class="row g-3">
+          <div class="col-6">
+            <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&q=80"
+                 class="w-100 rounded-4 shadow"
+                 style="height: 200px; object-fit: cover;" />
+            <img src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=400&q=80"
+                 class="w-100 rounded-4 shadow mt-3"
+                 style="height: 150px; object-fit: cover;" />
+          </div>
+          <div class="col-6 pt-4">
+            <img src="https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=400&q=80"
+                 class="w-100 rounded-4 shadow"
+                 style="height: 150px; object-fit: cover;" />
+            <img src="https://images.unsplash.com/photo-1518684079-3c830dcef090?w=400&q=80"
+                 class="w-100 rounded-4 shadow mt-3"
+                 style="height: 200px; object-fit: cover;" />
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Features Section -->
+<div class="container py-5">
+  <div class="text-center mb-5">
+    <h4 class="fw-bold">Why Choose Wanderlust? 🏠</h4>
+    <p class="text-muted">Everything you need for a perfect stay</p>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-4">
+      <div class="card border-0 rounded-4 p-4 h-100 text-center"
+           style="background: #fff5f5;">
+        <div style="font-size: 2.5rem;">🔐</div>
+        <h5 class="fw-bold mt-3">Secure Booking</h5>
+        <p class="text-muted mb-0">
+          Safe and secure bookings with instant confirmation emails.
+        </p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 rounded-4 p-4 h-100 text-center"
+           style="background: #f0fff4;">
+        <div style="font-size: 2.5rem;">🌍</div>
+        <h5 class="fw-bold mt-3">Worldwide Properties</h5>
+        <p class="text-muted mb-0">
+          Hundreds of unique properties across 50+ countries worldwide.
+        </p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 rounded-4 p-4 h-100 text-center"
+           style="background: #fffbf0;">
+        <div style="font-size: 2.5rem;">⭐</div>
+        <h5 class="fw-bold mt-3">Verified Reviews</h5>
+        <p class="text-muted mb-0">
+          Real reviews from real guests to help you choose wisely.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CTA Section -->
+<div class="py-5 text-white text-center home-dow">
+  <div class="container">
+    <h3 class="fw-bold mb-2">Ready to Find Your Dream Stay? 🏖️</h3>
+    <p class="mb-4 opacity-75">
+      Join thousands of happy travellers on Wanderlust
+    </p>
+    <a href="/listings" class="btn btn-light fw-bold px-5 py-2 rounded-3"
+       style="color: #e74c3c;">
+      Explore All Listings →
+    </a>
+  </div>
+</div>

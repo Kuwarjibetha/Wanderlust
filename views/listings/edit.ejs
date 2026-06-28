@@ -1,6 +1,6 @@
 <% layout("/layouts/boilerplate") %>
     <div class="container mt-4" style="max-width: 700px;">
-        <h3 class="fw-bold mb-4">Edit Your Listing 📝</h3>
+        <h3 class="fw-bold mb-4">Edit Your Listing ✏️</h3>
 
         <form method="POST" action="/listings/<%= listing._id %>?_method=PUT" enctype="multipart/form-data">
 
@@ -43,8 +43,8 @@
                         Nearby Place
                     </label>
 
-                    <select name="listing[nearbyPlace]" class="form-select" required>
-                        <option value="" selected disabled>Select Nearby Place</option>
+                    <select name="listing[nearbyPlace.type]" class="form-select" required>
+                        <option value="" selected disabled><%= listing.nearbyPlace.type %></option>
 
                         <option value="Airport">✈️ Airport</option>
                         <option value="Railway Station">🚃 Railway Station</option>
@@ -60,23 +60,31 @@
                         <option value="University">🎓 University</option>
                         <option value="Market">🛒 Market</option>
                     </select>
-
                 </div>
-                <div class="mb-3 col-md-8">
-                    <label class="form-label fw-semibold">Country</label>
-                    <input name="listing[country]" value="<%= listing.country %>" type="text" class="form-control"
-                        required />
+                <div class="mb-3 col-md-4">
+                    <label class="form-label fw-semibold">Near name</label>
+                    <input type="text" name="listing[nearbyPlace.name]" class="form-control"
+                        value="<%= listing.nearbyPlace.name %>" />
                 </div>
-                <!-- Max Persons -->
-                <div class="mb-3">
-                    <label class="form-label fw-semibold">👥 Max Persons Allowed</label>
-                    <input type="number" name="listing[maxPersons]" class="form-control"
-                        value="<%= listing.maxPersons || 1 %>" min="1" max="20" required />
-                    <small class="text-muted">Maximum number of guests allowed</small>
+                <div class="mb-3 col-md-4">
+                    <label class="form-label fw-semibold">Distance</label>
+                    <input type="text" name="listing[nearbyPlace.distance]" class="form-control"
+                        value="<%= listing.nearbyPlace.distance %>" />
                 </div>
             </div>
 
-
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Country</label>
+                <input name="listing[country]" value="<%= listing.country %>" type="text" class="form-control"
+                    required />
+            </div>
+            <!-- Max Persons -->
+            <div class="mb-3">
+                <label class="form-label fw-semibold">👥 Max Persons Allowed</label>
+                <input type="number" name="listing[maxPersons]" class="form-control"
+                    value="<%= listing.maxPersons || 1 %>" min="1" max="20" required />
+                <small class="text-muted">Maximum number of guests allowed</small>
+            </div>
 
             <button class="btn btn-danger w-100 py-2 mt-2">Save Changes</button>
 
