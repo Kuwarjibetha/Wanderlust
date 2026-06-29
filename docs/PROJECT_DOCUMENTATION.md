@@ -1,11 +1,11 @@
 # Wanderlust - Project Documentation
 
-Wanderlust is a full-stack hotel and vacation rental booking application built with Node.js, Express, MongoDB, Mongoose, EJS, Passport.js, Cloudinary, Nodemailer, and Google Gemini AI.
+Wanderlust is a full-stack hotel and vacation rental booking application. It uses Node.js, Express, MongoDB, Mongoose, EJS, Passport.js, Cloudinary, Nodemailer, and AI-assisted travel features.
 
-The app supports two main user roles:
+The application has two main user roles:
 
-- Guests can discover listings, use AI travel tools, book stays, manage bookings, write reviews, and save wishlist items.
-- Hosts can create and manage properties, upload images, view booking activity, and track dashboard statistics.
+- Guests browse listings, book stays, manage bookings, save wishlist items, write reviews, edit profiles, and use AI travel tools.
+- Hosts create and manage listings, upload images, view bookings received on their properties, edit profiles, and track dashboard statistics.
 
 ## Table of Contents
 
@@ -23,38 +23,42 @@ The app supports two main user roles:
 - [AI Features](#ai-features)
 - [Email Features](#email-features)
 - [Project Structure](#project-structure)
+- [Implementation Notes](#implementation-notes)
 - [Deployment](#deployment)
 - [Testing Notes](#testing-notes)
+- [Known Notes](#known-notes)
 - [Future Improvements](#future-improvements)
 
 ## Project Overview
 
-Wanderlust is inspired by property rental platforms. It lets hosts publish properties with images, price, location, nearby-place details, and guest capacity. Guests can search listings, view details, book properties, cancel bookings, review stays, and use AI tools for listing help.
+Wanderlust is inspired by property rental platforms. Hosts publish properties with images, descriptions, prices, locations, nearby-place details, and maximum guest capacity. Guests can search listings, open listing details, book stays, cancel bookings, review properties, and save favorites to a wishlist.
 
-The home route is role-based:
+The root route is role-based:
 
-- A guest sees the welcome page.
-- A host sees the dashboard with listing, booking, revenue, guest, and recent booking stats.
+- Guests are sent to the welcome page.
+- Hosts are sent to the dashboard with total listings, bookings, revenue, guests, recent bookings, and owned listings.
 
 ## Core Features
 
-- User signup, login, logout, sessions, and flash messages
+- Signup, login, logout, sessions, and flash messages
 - Guest, host, and admin role support
-- Role-based access control for host-only listing management
+- Host-only listing creation and management
+- Owner-only listing edit and delete protection
 - Listing CRUD with Cloudinary image uploads
-- Listing fields for location, country, nearby place, distance, price, and maximum guests
-- Search and filtering by title, location, country, minimum price, and maximum price
-- Guest booking flow with date validation and capacity validation
+- Listing search by title or location
+- Filters for country, minimum price, and maximum price
+- Booking form with date validation and maximum guest validation
 - Booking confirmation page and guest booking history
-- Booking cancellation with guest and host email notifications
-- Review creation, deletion, average rating display, and review author display
-- Wishlist add/remove functionality
-- Profile page and profile editing with avatar upload
-- Host dashboard for property performance overview
-- Gemini AI listing description generator
-- Gemini AI review summary generator
-- Gemini AI trip planner
-- Gemini AI listing chatbot
+- Booking cancellation with guest and host notifications
+- Review creation and deletion
+- Wishlist toggle and wishlist page
+- Profile page with role-specific data
+- Profile editing with bio and avatar upload
+- Host dashboard analytics
+- AI description generation
+- AI review summary
+- AI trip planner
+- AI listing chatbot
 
 ## Tech Stack
 
@@ -67,33 +71,33 @@ The home route is role-based:
 | Views | EJS, ejs-mate |
 | Authentication | Passport.js, passport-local, passport-local-mongoose |
 | Sessions | express-session |
+| Forms | method-override, express.urlencoded |
 | File upload | Multer |
 | Image hosting | Cloudinary, multer-storage-cloudinary |
 | Email | Nodemailer with Gmail |
-| AI | Google Gemini through `@google/generative-ai` |
-| Utilities | dotenv, connect-flash, method-override |
+| AI | Ollama `llama3.2` for active routes; Gemini code is retained but commented |
+| Utilities | dotenv, connect-flash |
 | Deployment config | Vercel |
 
 ## Architecture
 
-The project follows a traditional Express MVC-style structure:
+The project follows a classic Express MVC-style structure:
 
-- `app.js` defines the Express app, middleware, database connection, route handlers, authentication setup, AI routes, and server startup.
-- `models/` contains Mongoose schemas for users, listings, reviews, and bookings.
-- `views/` contains EJS pages grouped by feature.
-- `config/` contains Cloudinary and email configuration.
+- `app.js` defines app setup, database connection, middleware, authentication, routes, AI endpoints, and server startup.
+- `models/` contains Mongoose schemas for users, listings, bookings, and reviews.
+- `views/` contains EJS templates grouped by feature.
+- `config/` contains Cloudinary and mailer configuration.
 - `middleware.js` contains authentication and authorization helpers.
-- `public/` contains static CSS and client-side JavaScript.
+- `public/` contains static CSS and browser JavaScript.
+- `docs/` contains project documentation.
 
 ### Request Flow
 
 1. A browser sends a request to an Express route.
-2. Middleware handles sessions, authentication, flash messages, static files, body parsing, and method override.
-3. Route handlers read or write MongoDB data through Mongoose models.
-4. Views are rendered with EJS and shared layout templates.
-5. Cloudinary handles uploaded images.
-6. Nodemailer sends booking and cancellation emails.
-7. Gemini handles AI description, summary, itinerary, and chat generation.
+2. Global middleware handles parsing, sessions, authentication, flash messages, static files, and method override.
+3. Route handlers validate access, read or write MongoDB through Mongoose models, and optionally call Cloudinary, Nodemailer, or Ollama.
+4. EJS views render the response.
+5. Flash messages and `currUser` are available globally through `res.locals`.
 
 ## Installation
 
@@ -123,16 +127,22 @@ The project follows a traditional Express MVC-style structure:
    GMAIL_USER=<your-gmail-address>
    GMAIL_PASS=<your-gmail-app-password>
 
-   GEMINI_API_KEY=<your-gemini-api-key>
+   GEMINI_API_KEY=<your-gemini-api-key-if-you-enable-gemini-routes>
    ```
 
-4. Start the development server.
+4. Install and prepare Ollama if you want the current AI routes to work.
+
+   ```bash
+   ollama pull llama3.2
+   ```
+
+5. Start the development server.
 
    ```bash
    npm run dev
    ```
 
-5. Open the app.
+6. Open the app.
 
    ```text
    http://localhost:8080
@@ -143,20 +153,24 @@ The project follows a traditional Express MVC-style structure:
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `MONGO_URL` | Yes | MongoDB connection string |
-| `SECRET` | Yes | Session secret |
+| `SECRET` | Yes | Express session secret |
 | `CLOUD_NAME` | Yes | Cloudinary cloud name |
 | `CLOUD_API_KEY` | Yes | Cloudinary API key |
 | `CLOUD_API_SECRET` | Yes | Cloudinary API secret |
-| `GMAIL_USER` | Yes for email | Gmail address used by Nodemailer |
-| `GMAIL_PASS` | Yes for email | Gmail app password |
-| `GEMINI_API_KEY` | Yes for AI | Google Gemini API key |
+| `GMAIL_USER` | Required for email | Gmail account used by Nodemailer |
+| `GMAIL_PASS` | Required for email | Gmail app password |
+| `GEMINI_API_KEY` | Optional currently | Needed only if the commented Gemini AI routes are re-enabled |
+
+### Local AI Requirement
+
+The active AI implementation uses the `ollama` package and the `llama3.2` model. Ollama must be installed, the model must be available, and the Ollama service must be running on the machine that runs the app.
 
 ## Scripts
 
 | Command | Description |
 | --- | --- |
-| `npm start` | Runs the app with Node |
-| `npm run dev` | Runs the app with Nodemon |
+| `npm start` | Starts the app with Node |
+| `npm run dev` | Starts the app with Nodemon |
 
 ## User Roles
 
@@ -164,31 +178,31 @@ The project follows a traditional Express MVC-style structure:
 
 Guests can:
 
-- View the welcome page
+- View the welcome page after login
 - Browse and filter listings
 - View listing details
-- Book listings
-- Cancel their bookings
-- Write and delete their own reviews
+- Book properties
+- View and cancel their bookings
+- Write and delete reviews
 - Save and remove wishlist listings
-- Edit their profile
-- Use AI review summaries, trip planner, and listing chatbot
+- Edit their profile bio and avatar
+- Use review summaries, trip planner, and listing chatbot
 
 ### Host
 
 Hosts can:
 
-- View the host dashboard
-- Create new listings
+- View the host dashboard after login
+- Create listings
 - Upload listing images
 - Edit and delete owned listings
 - View bookings received on their listings
-- Edit their profile and avatar
-- Use AI listing description generation
+- Edit profile bio and avatar
+- Generate listing descriptions with AI
 
 ### Admin
 
-The `admin` role exists in the user schema, but public signup prevents users from creating admin accounts directly.
+The `admin` role exists in the schema, but public signup prevents users from choosing `admin`; submitted admin roles are converted to `guest`.
 
 ## User Workflows
 
@@ -196,24 +210,22 @@ The `admin` role exists in the user schema, but public signup prevents users fro
 
 1. Sign up or log in as a guest.
 2. Land on the welcome page.
-3. Search or browse `/listings`.
-4. Open a listing detail page.
-5. Use AI tools if needed:
-   - Summarize reviews
-   - Generate a trip plan
-   - Ask the listing chatbot questions
-6. Book the listing by entering guest details, dates, guest count, and travel type.
-7. Receive a booking confirmation page and optional email.
-8. View or cancel bookings from `My Bookings`.
+3. Browse `/listings` or search/filter listings.
+4. Open a listing details page.
+5. Add the listing to the wishlist if desired.
+6. Use AI tools to summarize reviews, plan a trip, or ask listing questions.
+7. Book the listing by entering contact details, dates, guest count, and travel type.
+8. View the confirmation page and receive an email if an email address is provided.
+9. View or cancel bookings from `My Bookings` or the profile page.
 
 ### Host Flow
 
 1. Sign up or log in as a host.
-2. Land on the dashboard.
-3. Create a listing with image, price, nearby place, country, and max guest capacity.
-4. Optionally generate the listing description with Gemini AI.
+2. Land on the host dashboard.
+3. Create a listing with title, description, image, price, location, country, nearby place, and maximum guests.
+4. Optionally generate the listing description with AI.
 5. Edit or delete owned listings.
-6. View booking activity and revenue stats from dashboard/profile.
+6. View received bookings and activity from the dashboard or profile page.
 
 ## Routes Documentation
 
@@ -228,7 +240,7 @@ The `admin` role exists in the user schema, but public signup prevents users fro
 | Method | Route | Access | Description |
 | --- | --- | --- | --- |
 | GET | `/signup` | Public | Render signup form |
-| POST | `/signup` | Public | Register user and log them in |
+| POST | `/signup` | Public | Register user, normalize unsafe admin role, and log in |
 | GET | `/login` | Public | Render login form |
 | POST | `/login` | Public | Authenticate user |
 | GET | `/logout` | Logged in | Log out current user |
@@ -237,49 +249,49 @@ The `admin` role exists in the user schema, but public signup prevents users fro
 
 | Method | Route | Access | Description |
 | --- | --- | --- | --- |
-| GET | `/listings` | Logged in | Show all listings with optional filters |
+| GET | `/listings` | Logged in | Show listings with optional search and filters |
 | GET | `/listings/new` | Host | Render new listing form |
 | POST | `/listings` | Host | Create listing and upload image |
-| GET | `/listings/:id` | Public/logged context | Show listing details, reviews, AI tools, and booking action |
+| GET | `/listings/:id` | Public | Show listing details, reviews, booking action, and AI tools |
 | GET | `/listings/:id/edit` | Owner | Render edit listing form |
-| PUT | `/listings/:id` | Owner | Update listing details and optionally replace image |
+| PUT | `/listings/:id` | Owner | Update listing and optionally replace Cloudinary image |
 | DELETE | `/listings/:id` | Owner | Delete listing |
 
 ### Reviews
 
 | Method | Route | Access | Description |
 | --- | --- | --- | --- |
-| POST | `/listings/:id/reviews` | Logged in | Add review to listing |
-| DELETE | `/listings/:id/reviews/:reviewId` | Logged in | Delete review and remove it from listing |
+| POST | `/listings/:id/reviews` | Logged in | Add a review to a listing |
+| DELETE | `/listings/:id/reviews/:reviewId` | Logged in | Remove review from listing and delete review document |
 
 ### Bookings
 
 | Method | Route | Access | Description |
 | --- | --- | --- | --- |
 | GET | `/listings/:id/book` | Logged in | Render booking form |
-| POST | `/listings/:id/book` | Logged in | Create booking, calculate total price, send emails |
+| POST | `/listings/:id/book` | Logged in | Create booking, calculate total price, and send emails |
 | GET | `/bookings/:id/confirmation` | Logged in | Show booking confirmation |
-| GET | `/my-bookings` | Logged in | Show current guest bookings |
-| DELETE | `/bookings/:id` | Logged in | Cancel booking and send cancellation emails |
+| GET | `/my-bookings` | Logged in | Show current user's valid bookings |
+| DELETE | `/bookings/:id` | Logged in | Cancel booking, delete booking, and send cancellation emails |
 
 ### Profile and Wishlist
 
 | Method | Route | Access | Description |
 | --- | --- | --- | --- |
-| GET | `/profile` | Logged in | Show profile, listings, bookings, or received bookings |
+| GET | `/profile` | Logged in | Show profile with guest bookings or host listings/received bookings |
 | GET | `/profile/edit` | Logged in | Render profile edit form |
-| PUT | `/profile` | Logged in | Update bio and avatar |
-| POST | `/wishlist/:id` | Logged in | Toggle listing in wishlist |
+| PUT | `/profile` | Logged in | Update bio and optionally replace avatar |
+| POST | `/wishlist/:id` | Logged in | Toggle listing in current user's wishlist |
 | GET | `/wishlist` | Logged in | Show saved listings |
 
 ### AI
 
 | Method | Route | Access | Description |
 | --- | --- | --- | --- |
-| POST | `/ai/generate-description` | Logged in | Generate listing description using title, location, country, and price |
-| GET | `/listings/:id/summarize-reviews` | Logged in | Summarize reviews for a listing |
-| POST | `/listings/:id/trip-planner` | Logged in | Generate itinerary for selected number of days |
-| POST | `/listings/:id/chat` | Logged in | Chat with AI assistant about the listing |
+| POST | `/ai/generate-description` | Logged in | Generate a short property description |
+| GET | `/listings/:id/summarize-reviews` | Logged in | Summarize listing reviews |
+| POST | `/listings/:id/trip-planner` | Logged in | Generate a day-by-day itinerary |
+| POST | `/listings/:id/chat` | Logged in | Answer listing-specific questions |
 
 ## Data Models
 
@@ -287,13 +299,13 @@ The `admin` role exists in the user schema, but public signup prevents users fro
 
 | Field | Type | Notes |
 | --- | --- | --- |
-| `username` | String | Added by `passport-local-mongoose` |
+| `username` | String | Provided by `passport-local-mongoose` |
 | `email` | String | Required and unique |
-| `role` | String | `guest`, `host`, or `admin` |
+| `role` | String | `guest`, `host`, or `admin`; defaults to `guest` |
 | `bio` | String | Optional profile text |
-| `avatar.url` | String | Profile image URL |
-| `avatar.filename` | String | Cloudinary filename |
-| `createdAt` | Date | Account creation date |
+| `avatar.url` | String | Avatar image URL |
+| `avatar.filename` | String | Cloudinary filename or `default` |
+| `createdAt` | Date | Account creation timestamp |
 | `wishlist` | ObjectId[] | References `Listing` |
 
 ### Listing
@@ -303,23 +315,23 @@ The `admin` role exists in the user schema, but public signup prevents users fro
 | `title` | String | Required |
 | `description` | String | Listing description |
 | `image.url` | String | Cloudinary or default image URL |
-| `image.filename` | String | Cloudinary filename |
+| `image.filename` | String | Cloudinary filename or `default` |
 | `price` | Number | Price per night |
 | `location` | String | City or area |
 | `country` | String | Country |
-| `nearbyPlace.type` | String | Example: Airport, Metro Station, Beach |
-| `nearbyPlace.name` | String | Nearby place name |
-| `nearbyPlace.distance` | String | Distance from property |
+| `nearbyPlace.type` | String | Required nearby place category |
+| `nearbyPlace.name` | String | Required nearby place name |
+| `nearbyPlace.distance` | String | Required distance text |
 | `owner` | ObjectId | References `User` |
-| `maxPersons` | Number | Maximum guests allowed |
+| `maxPersons` | Number | Maximum allowed guests; defaults to 1 |
 | `reviews` | ObjectId[] | References `Review` |
 
 ### Booking
 
 | Field | Type | Notes |
 | --- | --- | --- |
-| `listing` | ObjectId | References `Listing` |
-| `guest` | ObjectId | References `User` |
+| `listing` | ObjectId | Required, references `Listing` |
+| `guest` | ObjectId | Required, references `User` |
 | `guestName` | String | Required |
 | `guestPhone` | String | Required |
 | `guestEmail` | String | Optional |
@@ -327,9 +339,9 @@ The `admin` role exists in the user schema, but public signup prevents users fro
 | `checkOut` | Date | Required |
 | `guests` | Number | Required, minimum 1 |
 | `travelType` | String | `solo`, `couple`, `family`, or `bachelors` |
-| `totalPrice` | Number | Calculated as nights multiplied by listing price |
+| `totalPrice` | Number | Calculated from nights multiplied by listing price |
 | `status` | String | `pending`, `confirmed`, or `cancelled`; defaults to `confirmed` |
-| `bookedAt` | Date | Booking creation date |
+| `bookedAt` | Date | Booking creation timestamp |
 
 ### Review
 
@@ -337,39 +349,41 @@ The `admin` role exists in the user schema, but public signup prevents users fro
 | --- | --- | --- |
 | `comment` | String | Required |
 | `rating` | Number | Required, 1 to 5 |
-| `author` | ObjectId | References `User` |
-| `createdAt` | Date | Review creation date |
+| `author` | ObjectId | Required, references `User` |
+| `createdAt` | Date | Review creation timestamp |
 
 ## AI Features
 
-The AI features use Google Gemini through `@google/generative-ai` and the `gemini-2.5-flash` model.
+The active AI routes use Ollama through the `ollama` npm package with the `llama3.2` model.
+
+Gemini setup code and commented route implementations are still present in `app.js`. If Gemini is re-enabled, `GEMINI_API_KEY` must be configured and the route handlers should be switched back to the Gemini implementation.
 
 ### Listing Description Generator
 
-Available on the new listing page. Hosts enter title, location, country, and price, then click the AI button to generate a short property description.
+Used from the new listing experience. It creates a short, professional vacation rental description from title, location, country, and price.
 
 ### Review Summarizer
 
-Available on listing detail pages when reviews exist. It summarizes guest reviews in a short, helpful format.
+Used on listing detail pages when reviews exist. It summarizes rating comments into a short guest-friendly overview.
 
 ### Trip Planner
 
-Available for guests on listing detail pages. Guests enter a number of days, and the app generates a day-by-day travel itinerary for the listing location.
+Used on listing detail pages. It creates a day-by-day itinerary using the listing's location and requested trip length.
 
 ### Listing Chatbot
 
-Available for guests on listing detail pages. The chatbot answers short questions about the selected property using listing details and reviews as context.
+Used on listing detail pages. It answers short questions using listing title, location, price, maximum guests, description, and review context.
 
 ## Email Features
 
-The app uses Nodemailer with Gmail.
+The app uses Nodemailer with Gmail in `config/mailer.js`.
 
 - Guest booking confirmation email
 - Host new-booking notification email
 - Guest booking-cancellation email
 - Host booking-cancellation email
 
-Emails require `GMAIL_USER` and `GMAIL_PASS` in `.env`. If email sending fails, the app logs the error and continues the user flow.
+Email delivery requires `GMAIL_USER` and `GMAIL_PASS`. Booking and cancellation flows continue even if email delivery fails; errors are logged to the server console.
 
 ## Project Structure
 
@@ -430,21 +444,23 @@ MAJORPROJECT/
         └── index.ejs
 ```
 
-## Important Implementation Details
+## Implementation Notes
 
-- `express.urlencoded()` handles form submissions.
+- `dotenv` is loaded at the top of `app.js`.
+- `express.urlencoded()` handles normal form submissions.
 - `express.json()` handles JSON requests for AI endpoints.
-- `method-override` supports PUT and DELETE requests from forms.
+- `method-override` enables PUT and DELETE requests from forms.
 - `express-session` stores login sessions.
-- `connect-flash` displays temporary success and error messages.
-- `passport-local-mongoose` handles password hashing and user authentication helpers.
-- `multer-storage-cloudinary` sends uploaded listing and avatar images to Cloudinary.
+- `connect-flash` displays one-time success and error messages.
+- `passport-local-mongoose` provides password hashing and authentication helpers.
+- `multer-storage-cloudinary` uploads listing and avatar images to the `wanderlust` Cloudinary folder.
 - `res.locals.currUser`, `res.locals.success`, and `res.locals.error` are available in all EJS views.
-- Wishlist data is refreshed for logged-in users so listing cards can show saved state.
+- Logged-in user wishlist data is refreshed globally so listing cards can show saved state.
+- Deleted listings are filtered out of guest booking views to avoid rendering broken booking references.
 
 ## Deployment
 
-The project includes `vercel.json` for Vercel deployment:
+The project includes `vercel.json` for Vercel:
 
 ```json
 {
@@ -464,7 +480,7 @@ The project includes `vercel.json` for Vercel deployment:
 }
 ```
 
-Before deployment, configure these environment variables in the hosting dashboard:
+Before deployment, configure the required environment variables in the hosting dashboard:
 
 - `MONGO_URL`
 - `SECRET`
@@ -473,46 +489,60 @@ Before deployment, configure these environment variables in the hosting dashboar
 - `CLOUD_API_SECRET`
 - `GMAIL_USER`
 - `GMAIL_PASS`
-- `GEMINI_API_KEY`
+- `GEMINI_API_KEY` only if Gemini routes are enabled
+
+The currently active Ollama-based AI routes need access to an Ollama runtime. On serverless hosting, this usually requires changing the AI implementation to a hosted model provider or running Ollama on a reachable service.
 
 ## Testing Notes
 
-There is no formal automated test suite yet. Current testing can be done manually:
+There is no automated test suite yet. Manual testing should cover:
 
 - Register as guest and host.
 - Log in and log out.
+- Confirm guest users land on the welcome page.
+- Confirm host users land on the dashboard.
 - Create, edit, and delete a listing as a host.
-- Upload listing and avatar images.
+- Upload listing and profile images.
 - Search and filter listings.
 - Book a listing as a guest.
+- Confirm invalid booking dates are rejected.
+- Confirm bookings over `maxPersons` are rejected.
+- View booking confirmation.
 - Cancel a booking.
 - Add and delete reviews.
 - Add and remove wishlist items.
+- Edit profile bio and avatar.
 - Test AI description generation, review summary, trip planner, and chatbot.
-- Verify booking and cancellation emails.
+- Verify guest and host booking emails.
+- Verify guest and host cancellation emails.
 
-The `testai.js` file can be used to verify Gemini API connectivity.
+The `testai.js` and `testmail.js` files can be used for focused local checks of AI and email connectivity.
 
 ## Known Notes
 
-- The app currently starts two listeners on port `8080` in `app.js`; this may need cleanup for production.
+- `app.js` currently starts two listeners on port `8080`; this should be cleaned up before production deployment.
+- The review delete route requires login but does not currently verify that the logged-in user is the review author.
 - Payment processing is not implemented.
 - Admin-specific screens are not implemented.
+- Booking date availability checks are not implemented.
 - Email delivery depends on Gmail app-password configuration.
-- AI responses depend on Gemini API availability and may fail during high-demand periods.
+- Active AI features depend on local Ollama availability.
+- The Gemini dependency and initialization remain in the code even though active AI routes use Ollama.
 
 ## Future Improvements
 
-- Add payment integration
-- Add maps and geolocation
-- Add admin dashboard
-- Add stronger server-side validation
-- Add automated tests
-- Add booking date availability checks
-- Add image deletion cleanup when listings are deleted
-- Add pagination for listings and bookings
-- Move route handlers into separate route/controller files
-- Add REST API documentation for external clients
+- Add payment integration.
+- Add booking availability checks for overlapping dates.
+- Add stronger server-side validation.
+- Add automated tests.
+- Add admin dashboard and moderation tools.
+- Add maps and geolocation.
+- Add listing and booking pagination.
+- Delete related reviews/bookings and Cloudinary assets when listings are deleted.
+- Verify review ownership before deletion.
+- Move route handlers into separate route/controller files.
+- Consolidate AI provider selection behind a service module.
+- Replace local-only AI dependency for production deployments.
 
 ## Author
 
