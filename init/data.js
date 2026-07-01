@@ -10,6 +10,8 @@ const sampleListings = [
     price: 1500,
     location: "Malibu",
     country: "United States",
+    maxPersons: 4,
+    nearbyPlace: { type: "Beach", name: "Malibu Beach", distance: "200m" },
   },
   {
     title: "Modern Loft in Downtown",
@@ -22,6 +24,8 @@ const sampleListings = [
     price: 1200,
     location: "New York City",
     country: "United States",
+    maxPersons: 2,
+    nearbyPlace: { type: "Metro Station", name: "Times Square Station", distance: "300m" },
   },
   {
     title: "Mountain Retreat",
@@ -34,6 +38,8 @@ const sampleListings = [
     price: 1000,
     location: "Aspen",
     country: "United States",
+    maxPersons: 3,
+    nearbyPlace: { type: "Park", name: "Aspen Trailhead", distance: "1km" },
   },
   {
     title: "Historic Villa in Tuscany",
@@ -46,6 +52,8 @@ const sampleListings = [
     price: 2500,
     location: "Florence",
     country: "Italy",
+    maxPersons: 6,
+    nearbyPlace: { type: "Tourist Attraction", name: "Florence Cathedral", distance: "2km" },
   },
   {
     title: "Secluded Treehouse Getaway",
@@ -58,6 +66,8 @@ const sampleListings = [
     price: 800,
     location: "Portland",
     country: "United States",
+    maxPersons: 2,
+    nearbyPlace: { type: "Park", name: "Forest Park", distance: "500m" },
   },
   {
     title: "Beachfront Paradise",
@@ -70,6 +80,8 @@ const sampleListings = [
     price: 2000,
     location: "Cancun",
     country: "Mexico",
+    maxPersons: 5,
+    nearbyPlace: { type: "Beach", name: "Cancun Beach", distance: "50m" },
   },
   {
     title: "Rustic Cabin by the Lake",
@@ -82,6 +94,8 @@ const sampleListings = [
     price: 900,
     location: "Lake Tahoe",
     country: "United States",
+    maxPersons: 4,
+    nearbyPlace: { type: "Park", name: "Lake Tahoe Shoreline", distance: "150m" },
   },
   {
     title: "Luxury Penthouse with City Views",
@@ -94,6 +108,8 @@ const sampleListings = [
     price: 3500,
     location: "Los Angeles",
     country: "United States",
+    maxPersons: 4,
+    nearbyPlace: { type: "Shopping Mall", name: "LA Live", distance: "1km" },
   },
   {
     title: "Ski-In/Ski-Out Chalet",
@@ -106,6 +122,8 @@ const sampleListings = [
     price: 3000,
     location: "Verbier",
     country: "Switzerland",
+    maxPersons: 6,
+    nearbyPlace: { type: "Tourist Attraction", name: "Verbier Ski Lift", distance: "100m" },
   },
   {
     title: "Safari Lodge in the Serengeti",
@@ -118,6 +136,8 @@ const sampleListings = [
     price: 4000,
     location: "Serengeti National Park",
     country: "Tanzania",
+    maxPersons: 4,
+    nearbyPlace: { type: "Tourist Attraction", name: "Serengeti Safari Gate", distance: "3km" },
   },
   {
     title: "Historic Canal House",
@@ -130,6 +150,8 @@ const sampleListings = [
     price: 1800,
     location: "Amsterdam",
     country: "Netherlands",
+    maxPersons: 3,
+    nearbyPlace: { type: "Tourist Attraction", name: "Anne Frank House", distance: "800m" },
   },
   {
     title: "Private Island Retreat",
@@ -142,6 +164,8 @@ const sampleListings = [
     price: 10000,
     location: "Fiji",
     country: "Fiji",
+    maxPersons: 8,
+    nearbyPlace: { type: "Beach", name: "Private Lagoon", distance: "0m" },
   },
   {
     title: "Charming Cottage in the Cotswolds",
@@ -154,6 +178,8 @@ const sampleListings = [
     price: 1200,
     location: "Cotswolds",
     country: "United Kingdom",
+    maxPersons: 3,
+    nearbyPlace: { type: "Market", name: "Cotswolds Farmers Market", distance: "600m" },
   },
   {
     title: "Historic Brownstone in Boston",
@@ -166,6 +192,8 @@ const sampleListings = [
     price: 2200,
     location: "Boston",
     country: "United States",
+    maxPersons: 4,
+    nearbyPlace: { type: "University", name: "Boston University", distance: "1.5km" },
   },
   {
     title: "Beachfront Bungalow in Bali",
@@ -178,6 +206,8 @@ const sampleListings = [
     price: 1800,
     location: "Bali",
     country: "Indonesia",
+    maxPersons: 4,
+    nearbyPlace: { type: "Beach", name: "Seminyak Beach", distance: "300m" },
   },
   {
     title: "Mountain View Cabin in Banff",
@@ -190,6 +220,8 @@ const sampleListings = [
     price: 1500,
     location: "Banff",
     country: "Canada",
+    maxPersons: 4,
+    nearbyPlace: { type: "Tourist Attraction", name: "Banff National Park", distance: "2km" },
   },
   {
     title: "Art Deco Apartment in Miami",
@@ -202,6 +234,8 @@ const sampleListings = [
     price: 1600,
     location: "Miami",
     country: "United States",
+    maxPersons: 3,
+    nearbyPlace: { type: "Beach", name: "South Beach", distance: "400m" },
   },
   {
     title: "Tropical Villa in Phuket",
@@ -214,6 +248,8 @@ const sampleListings = [
     price: 3000,
     location: "Phuket",
     country: "Thailand",
+    maxPersons: 6,
+    nearbyPlace: { type: "Beach", name: "Patong Beach", distance: "700m" },
   },
   {
     title: "Historic Castle in Scotland",
@@ -226,6 +262,8 @@ const sampleListings = [
     price: 4000,
     location: "Scottish Highlands",
     country: "United Kingdom",
+    maxPersons: 6,
+    nearbyPlace: { type: "Tourist Attraction", name: "Eilean Donan Castle", distance: "5km" },
   },
   {
     title: "Desert Oasis in Dubai",
@@ -238,6 +276,8 @@ const sampleListings = [
     price: 5000,
     location: "Dubai",
     country: "United Arab Emirates",
+    maxPersons: 5,
+    nearbyPlace: { type: "Shopping Mall", name: "Dubai Mall", distance: "2km" },
   },
   {
     title: "Rustic Log Cabin in Montana",
@@ -250,6 +290,8 @@ const sampleListings = [
     price: 1100,
     location: "Montana",
     country: "United States",
+    maxPersons: 4,
+    nearbyPlace: { type: "Park", name: "Glacier National Park", distance: "10km" },
   },
   {
     title: "Beachfront Villa in Greece",
@@ -262,6 +304,8 @@ const sampleListings = [
     price: 2500,
     location: "Mykonos",
     country: "Greece",
+    maxPersons: 5,
+    nearbyPlace: { type: "Beach", name: "Mykonos Beach", distance: "100m" },
   },
   {
     title: "Eco-Friendly Treehouse Retreat",
@@ -274,6 +318,8 @@ const sampleListings = [
     price: 750,
     location: "Costa Rica",
     country: "Costa Rica",
+    maxPersons: 2,
+    nearbyPlace: { type: "Park", name: "Monteverde Cloud Forest", distance: "4km" },
   },
   {
     title: "Historic Cottage in Charleston",
@@ -286,6 +332,8 @@ const sampleListings = [
     price: 1600,
     location: "Charleston",
     country: "United States",
+    maxPersons: 3,
+    nearbyPlace: { type: "Tourist Attraction", name: "Charleston Historic District", distance: "500m" },
   },
   {
     title: "Modern Apartment in Tokyo",
@@ -298,6 +346,8 @@ const sampleListings = [
     price: 2000,
     location: "Tokyo",
     country: "Japan",
+    maxPersons: 3,
+    nearbyPlace: { type: "Metro Station", name: "Shibuya Station", distance: "350m" },
   },
   {
     title: "Lakefront Cabin in New Hampshire",
@@ -310,6 +360,8 @@ const sampleListings = [
     price: 1200,
     location: "New Hampshire",
     country: "United States",
+    maxPersons: 4,
+    nearbyPlace: { type: "Park", name: "White Mountain National Forest", distance: "1km" },
   },
   {
     title: "Luxury Villa in the Maldives",
@@ -322,6 +374,8 @@ const sampleListings = [
     price: 6000,
     location: "Maldives",
     country: "Maldives",
+    maxPersons: 4,
+    nearbyPlace: { type: "Beach", name: "Overwater Lagoon", distance: "0m" },
   },
   {
     title: "Ski Chalet in Aspen",
@@ -334,6 +388,8 @@ const sampleListings = [
     price: 4000,
     location: "Aspen",
     country: "United States",
+    maxPersons: 6,
+    nearbyPlace: { type: "Tourist Attraction", name: "Aspen Mountain Ski Resort", distance: "200m" },
   },
   {
     title: "Secluded Beach House in Costa Rica",
@@ -346,6 +402,8 @@ const sampleListings = [
     price: 1800,
     location: "Costa Rica",
     country: "Costa Rica",
+    maxPersons: 4,
+    nearbyPlace: { type: "Beach", name: "Pacific Coast Beach", distance: "150m" },
   },
 ];
 

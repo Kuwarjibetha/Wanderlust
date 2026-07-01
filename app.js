@@ -1,6 +1,7 @@
 require("dotenv").config();                        //  must be first line!
 
 const express = require("express");
+const helmet = require("helmet");
 const app = express();
 const mongoose = require("mongoose");
 const path = require("path");
@@ -25,6 +26,8 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const ollama = require("ollama").default;  // ollama model
 const upload = multer({ storage });
+const PORT = process.env.PORT || 8080;
+
 
 
 
@@ -72,7 +75,7 @@ passport.deserializeUser(User.deserializeUser());
 
 
 
- 
+
 app.use(async (req, res, next) => {             //  Global Locals
     res.locals.success = req.flash("success");
     res.locals.error = req.flash("error");
@@ -154,7 +157,7 @@ app.get("/logout", (req, res, next) => {
 // home sec
 app.get("/", isLoggedIn, async (req, res) => {
 
-    
+
     if (req.user.role === "guest") {            // If guest user present then  show welcome page
         return res.render("welcome/index.ejs");
     }
@@ -163,26 +166,26 @@ app.get("/", isLoggedIn, async (req, res) => {
 
 
 
-      // If host user matched then   show dashboard
-    
+    // If host user matched then   show dashboard
+
     const myListings = await Listing.find({ owner: req.user._id }); // Get all my listings
 
-    
+
     const myListingIds = myListings.map(l => l._id);               //  Get all bookings on my listings
     const allBookings = await Booking.find({ listing: { $in: myListingIds } })
         .populate("listing")
         .sort({ bookedAt: -1 });
 
-    
+
     const totalListings = myListings.length;          //Calculate stats
     const totalBookings = allBookings.length;
     const totalRevenue = allBookings.reduce((sum, b) => sum + b.totalPrice, 0);
     const totalGuests = allBookings.reduce((sum, b) => sum + Number(b.guests), 0);
 
-    
+
     const recentBookings = allBookings.slice(0, 5);     //Get recent 5 bookings
 
-    
+
     res.render("dashboard/index.ejs", {                  // Send to dashboard view
         totalListings,
         totalBookings,
@@ -344,12 +347,12 @@ app.post("/listings/:id/reviews", isLoggedIn, async (req, res) => {
 app.delete("/listings/:id/reviews/:reviewId", isLoggedIn, async (req, res) => {
     const { id, reviewId } = req.params;
 
-    
+
     await Listing.findByIdAndUpdate(id, {
         $pull: { reviews: reviewId }
     });
 
-   
+
     await Review.findByIdAndDelete(reviewId);  // Delete the review itself
 
     req.flash("success", "Review deleted!");
@@ -364,7 +367,7 @@ app.delete("/listings/:id/reviews/:reviewId", isLoggedIn, async (req, res) => {
 
 //  BOOKING ROUTES
 
-                        // show booking form rou
+// show booking form rou
 app.get("/listings/:id/book", isLoggedIn, async (req, res) => {
     const listing = await Listing.findById(req.params.id);
     res.render("bookings/new.ejs", { listing });
@@ -465,7 +468,7 @@ app.get("/my-bookings", isLoggedIn, async (req, res) => {
     const bookings = await Booking.find({ guest: req.user._id })
         .populate("listing");
 
-    
+
     const validBookings = bookings.filter(b => b.listing !== null); // filter the bookings where listing was deleted
 
     res.render("bookings/index.ejs", { bookings: validBookings });
@@ -577,7 +580,7 @@ app.get("/profile/edit", isLoggedIn, async (req, res) => {
 app.put("/profile", isLoggedIn, upload.single("avatar"), async (req, res) => {
     const user = await User.findById(req.user._id);
 
-    
+
     user.bio = req.body.bio || ""; // update bio
 
     // Update avatar if new image uploaded
@@ -626,7 +629,7 @@ app.post("/wishlist/:id", isLoggedIn, async (req, res) => {
         req.flash("success", "Added to wishlist ❤️");
     }
 
-    
+
     const referer = req.headers.referer || "/listings"; // Redirect back to where user came from
     res.redirect(referer);
 });
@@ -656,67 +659,32 @@ app.get("/wishlist", isLoggedIn, async (req, res) => {
 // Generate listing description using Gemini AI
 
 
-// app.post("/ai/generate-description", isLoggedIn, async (req, res) => {
-//     const { title, location, country, price } = req.body;
-
-//     console.log(" AI request received:", { title, location, country, price });
-
-//     try {
-//         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-//         const prompt = `
-//       Write a short, attractive property description for a vacation rental listing.
-
-//       Property Details:
-//       - Title: ${title}
-//       - Location: ${location}, ${country}
-//       - Price: ₹${price} per night
-
-//       Rules:
-//       - Maximum 3-4 sentences
-//       - Mention location highlights
-//       - Sound welcoming and professional
-//       - Don't use emojis
-//       - Don't mention price in description
-//     `;
-
-//         const result = await model.generateContent(prompt);
-//         const description = result.response.text();
-
-//         res.json({ success: true, description });
-
-//     } catch (err) {
-//         console.log("AI error:", err.message);
-//         res.json({ success: false, message: "AI generation failed!" });
-//     }
-// });
-
-
-
-// ollama use for description
-
 app.post("/ai/generate-description", isLoggedIn, async (req, res) => {
     const { title, location, country, price } = req.body;
-    console.log("AI request received:", { title, location, country, price });
+
+    console.log(" AI request received:", { title, location, country, price });
 
     try {
-        const response = await ollama.chat({
-            model: "llama3.2",
-            messages: [{
-                role: "user",
-                content: `Write a short attractive property description for a vacation rental.
-          Title: ${title}
-          Location: ${location}, ${country}
-          Price: ₹${price}/night
-          Rules:
-          - Maximum 3-4 sentences
-          - Mention location highlights
-          - Sound welcoming and professional
-          - Don't use emojis
-          - Don't mention price`
-            }]
-        });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const prompt = `
+      Write a short, attractive property description for a vacation rental listing.
 
-        const description = response.message.content;
+      Property Details:
+      - Title: ${title}
+      - Location: ${location}, ${country}
+      - Price: ₹${price} per night
+
+      Rules:
+      - Maximum 3-4 sentences
+      - Mention location highlights
+      - Sound welcoming and professional
+      - Don't use emojis
+      - Don't mention price in description
+    `;
+
+        const result = await model.generateContent(prompt);
+        const description = result.response.text();
+
         res.json({ success: true, description });
 
     } catch (err) {
@@ -727,49 +695,36 @@ app.post("/ai/generate-description", isLoggedIn, async (req, res) => {
 
 
 
+// ollama use for description
 
-
-
-
-
-// AI Review Summarizer
-// app.get("/listings/:id/summarize-reviews", isLoggedIn, async (req, res) => {
-//     const listing = await Listing.findById(req.params.id)
-//         .populate({
-//             path: "reviews",
-//             populate: { path: "author" }
-//         });
-
-//     // Need at least 1 review
-//     if (listing.reviews.length === 0) {
-//         return res.json({ success: false, message: "No reviews yet!" });
-//     }
-
-//     // Build reviews text for AI
-//     const reviewsText = listing.reviews.map(r =>
-//         `${r.author.username} gave ${r.rating} stars: "${r.comment}"`
-//     ).join("\n");
+// app.post("/ai/generate-description", isLoggedIn, async (req, res) => {
+//     const { title, location, country, price } = req.body;
+//     console.log("AI request received:", { title, location, country, price });
 
 //     try {
-//         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+//         const response = await ollama.chat({
+//             model: "llama3.2",
+//             messages: [{
+//                 role: "user",
+//                 content: `Write a short attractive property description for a vacation rental.
+//           Title: ${title}
+//           Location: ${location}, ${country}
+//           Price: ₹${price}/night
+//           Rules:
+//           - Maximum 3-4 sentences
+//           - Mention location highlights
+//           - Sound welcoming and professional
+//           - Don't use emojis
+//           - Don't mention price`
+//             }]
+//         });
 
-//         const prompt = `
-//       Summarize these hotel reviews in 2-3 short sentences.
-//       Mention what guests loved and any complaints.
-//       Keep it friendly and helpful.
-
-//       Reviews:
-//       ${reviewsText}
-//     `;
-
-//         const result = await model.generateContent(prompt);
-//         const summary = result.response.text();
-
-//         res.json({ success: true, summary });
+//         const description = response.message.content;
+//         res.json({ success: true, description });
 
 //     } catch (err) {
-//         console.log("AI Review error:", err.message);
-//         res.json({ success: false, message: "Summary failed!" });
+//         console.log("AI error:", err.message);
+//         res.json({ success: false, message: "AI generation failed!" });
 //     }
 // });
 
@@ -779,34 +734,40 @@ app.post("/ai/generate-description", isLoggedIn, async (req, res) => {
 
 
 
-// ollama model review generate
 
+// AI Review Summarizer
 app.get("/listings/:id/summarize-reviews", isLoggedIn, async (req, res) => {
     const listing = await Listing.findById(req.params.id)
-        .populate({ path: "reviews", populate: { path: "author" } });
+        .populate({
+            path: "reviews",
+            populate: { path: "author" }
+        });
 
+    // Need at least 1 review
     if (listing.reviews.length === 0) {
         return res.json({ success: false, message: "No reviews yet!" });
     }
 
+    // Build reviews text for AI
     const reviewsText = listing.reviews.map(r =>
         `${r.author.username} gave ${r.rating} stars: "${r.comment}"`
     ).join("\n");
 
     try {
-        const response = await ollama.chat({
-            model: "llama3.2",
-            messages: [{
-                role: "user",
-                content: `Summarize these hotel reviews in 2-3 short sentences.
-          Mention what guests loved and any complaints.
-          Keep it friendly and helpful.
-          Reviews:
-          ${reviewsText}`
-            }]
-        });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-        const summary = response.message.content;
+        const prompt = `
+      Summarize these hotel reviews in 2-3 short sentences.
+      Mention what guests loved and any complaints.
+      Keep it friendly and helpful.
+
+      Reviews:
+      ${reviewsText}
+    `;
+
+        const result = await model.generateContent(prompt);
+        const summary = result.response.text();
+
         res.json({ success: true, summary });
 
     } catch (err) {
@@ -818,79 +779,121 @@ app.get("/listings/:id/summarize-reviews", isLoggedIn, async (req, res) => {
 
 
 
-// AI Trip Planner
-// app.post("/listings/:id/trip-planner", isLoggedIn, async (req, res) => {
-//     const listing = await Listing.findById(req.params.id);
-//     const { days } = req.body;
+
+
+
+// ollama model review generate
+
+// app.get("/listings/:id/summarize-reviews", isLoggedIn, async (req, res) => {
+//     const listing = await Listing.findById(req.params.id)
+//         .populate({ path: "reviews", populate: { path: "author" } });
+
+//     if (listing.reviews.length === 0) {
+//         return res.json({ success: false, message: "No reviews yet!" });
+//     }
+
+//     const reviewsText = listing.reviews.map(r =>
+//         `${r.author.username} gave ${r.rating} stars: "${r.comment}"`
+//     ).join("\n");
 
 //     try {
-//         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+//         const response = await ollama.chat({
+//             model: "llama3.2",
+//             messages: [{
+//                 role: "user",
+//                 content: `Summarize these hotel reviews in 2-3 short sentences.
+//           Mention what guests loved and any complaints.
+//           Keep it friendly and helpful.
+//           Reviews:
+//           ${reviewsText}`
+//             }]
+//         });
 
-//         const prompt = `
-//       Create a ${days}-day trip itinerary for a guest staying at:
-//       Property: ${listing.title}
-//       Location: ${listing.location}, ${listing.country}
-//       Rules:
-//       - Day by day plan
-//       - Include morning, afternoon, evening activities
-//       - Mention local attractions, food, culture
-//       - Format each day clearly as "Day 1:", "Day 2:" etc
-//       - Maximum 4-5 activities per day
-//       - Don't mention prices
-//     `;
-
-//         const result = await model.generateContent(prompt);
-//         const itinerary = result.response.text();
-//         return res.json({ success: true, itinerary });
+//         const summary = response.message.content;
+//         res.json({ success: true, summary });
 
 //     } catch (err) {
-//         console.log("Trip planner error:", err.message);
-
-//         // Check if it's a busy error
-//         if (err.message.includes("503") || err.message.includes("high demand")) {
-//             return res.json({
-//                 success: false,
-//                 message: "AI is busy right now! Please try again in a moment. 🙏"
-//             });
-//         }
-
-//         res.json({ success: false, message: "Trip planning failed!" });
+//         console.log("AI Review error:", err.message);
+//         res.json({ success: false, message: "Summary failed!" });
 //     }
 // });
 
 
-// ollama model 
 
+
+// AI Trip Planner
 app.post("/listings/:id/trip-planner", isLoggedIn, async (req, res) => {
     const listing = await Listing.findById(req.params.id);
     const { days } = req.body;
 
     try {
-        const response = await ollama.chat({
-            model: "llama3.2",
-            messages: [{
-                role: "user",
-                content: `Create a ${days}-day trip itinerary for a guest staying at:
-          Property: ${listing.title}
-          Location: ${listing.location}, ${listing.country}
-          Rules:
-          - Day by day plan
-          - Include morning, afternoon, evening activities
-          - Mention local attractions, food, culture
-          - Format each day as "Day 1:", "Day 2:" etc
-          - Maximum 4-5 activities per day
-          - Don't mention prices`
-            }]
-        });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-        const itinerary = response.message.content;
-        res.json({ success: true, itinerary });
+        const prompt = `
+      Create a ${days}-day trip itinerary for a guest staying at:
+      Property: ${listing.title}
+      Location: ${listing.location}, ${listing.country}
+      Rules:
+      - Day by day plan
+      - Include morning, afternoon, evening activities
+      - Mention local attractions, food, culture
+      - Format each day clearly as "Day 1:", "Day 2:" etc
+      - Maximum 4-5 activities per day
+      - Don't mention prices
+    `;
+
+        const result = await model.generateContent(prompt);
+        const itinerary = result.response.text();
+        return res.json({ success: true, itinerary });
 
     } catch (err) {
         console.log("Trip planner error:", err.message);
-        res.json({ success: false, message: "Trip planning failed! Try again." });
+
+        // Check if it's a busy error
+        if (err.message.includes("503") || err.message.includes("high demand")) {
+            return res.json({
+                success: false,
+                message: "AI is busy right now! Please try again in a moment. 🙏"
+            });
+        }
+
+        res.json({ success: false, message: "Trip planning failed!" });
     }
 });
+
+
+// ollama model 
+
+// app.post("/listings/:id/trip-planner", isLoggedIn, async (req, res) => {
+//     const listing = await Listing.findById(req.params.id);
+//     const { days } = req.body;
+
+//     try {
+//         const response = await ollama.chat({
+//             model: "llama3.2",
+//             messages: [{
+//                 role: "user",
+//                 content: `Create a ${days}-day trip itinerary for a guest staying at:
+//           Property: ${listing.title}
+//           Location: ${listing.location}, ${listing.country}
+//           Rules:
+//           - Day by day plan
+//           - Include morning, afternoon, evening activities
+//           - Mention local attractions, food, culture
+//           - Format each day as "Day 1:", "Day 2:" etc
+//           - Maximum 4-5 activities per day
+//           - Don't mention prices`
+//             }]
+//         });
+
+//         const itinerary = response.message.content;
+//         res.json({ success: true, itinerary });
+
+//     } catch (err) {
+//         console.log("Trip planner error:", err.message);
+//         res.json({ success: false, message: "Trip planning failed! Try again." });
+//     }
+// });
 
 
 
@@ -899,63 +902,15 @@ app.post("/listings/:id/trip-planner", isLoggedIn, async (req, res) => {
 
 // AI Chatbot
 
-// app.post("/listings/:id/chat", isLoggedIn, async (req, res) => {
-//     const listing = await Listing.findById(req.params.id)
-//         .populate("owner")
-//         .populate({
-//             path: "reviews",
-//             populate: { path: "author" }
-//         });
-
-//     const { message } = req.body;
-
-//     const listingContext = `
-//     Property: ${listing.title}
-//     Location: ${listing.location}, ${listing.country}
-//     Price: ₹${listing.price}/night
-//     Max Persons: ${listing.maxPersons}
-//     Description: ${listing.description}
-//     Reviews: ${listing.reviews.length > 0
-//             ? listing.reviews.map(r => `${r.rating} stars: ${r.comment}`).join(" | ")
-//             : "No reviews yet"
-//         }
-//   `;
-
-//     try {
-//         const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-//         const prompt = `
-//       You are a helpful assistant for property "${listing.title}".
-//       Only answer questions about this property.
-//       Be friendly and short (max 3 sentences).
-
-//       Property Info:
-//       ${listingContext}
-
-//       Guest asks: ${message}
-//     `;
-
-//         const result = await model.generateContent(prompt);
-//         const reply = result.response.text();
-
-//         res.json({ success: true, reply });
-
-//     } catch (err) {
-//         console.log("Chatbot error:", err.message);
-//         res.json({ success: false, message: "AI is busy! Try again. 🙏" });
-//     }
-// });
-
-
-//ollama model 
-
 app.post("/listings/:id/chat", isLoggedIn, async (req, res) => {
     const listing = await Listing.findById(req.params.id)
         .populate("owner")
-        .populate({ path: "reviews", populate: { path: "author" } });
+        .populate({
+            path: "reviews",
+            populate: { path: "author" }
+        });
 
     const { message } = req.body;
-    console.log("Chat message received:", message);
 
     const listingContext = `
     Property: ${listing.title}
@@ -970,35 +925,89 @@ app.post("/listings/:id/chat", isLoggedIn, async (req, res) => {
   `;
 
     try {
-        const response = await ollama.chat({
-            model: "llama3.2",
-            messages: [{
-                role: "user",
-                content: `You are a helpful assistant for "${listing.title}".
-          Only answer questions about this property.
-          Be friendly and short (max 3 sentences).
-          Property Info: ${listingContext}
-          Guest asks: ${message}`
-            }]
-        });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-        const reply = response.message.content;
+        const prompt = `
+      You are a helpful assistant for property "${listing.title}".
+      Only answer questions about this property.
+      Be friendly and short (max 3 sentences).
+
+      Property Info:
+      ${listingContext}
+
+      Guest asks: ${message}
+    `;
+
+        const result = await model.generateContent(prompt);
+        const reply = result.response.text();
+
         res.json({ success: true, reply });
 
     } catch (err) {
         console.log("Chatbot error:", err.message);
-        res.json({ success: false, message: "AI is busy! Try again." });
+        res.json({ success: false, message: "AI is busy! Try again. 🙏" });
     }
 });
 
 
+//ollama model 
+
+// app.post("/listings/:id/chat", isLoggedIn, async (req, res) => {
+//     const listing = await Listing.findById(req.params.id)
+//         .populate("owner")
+//         .populate({ path: "reviews", populate: { path: "author" } });
+
+//     const { message } = req.body;
+//     console.log("Chat message received:", message);
+
+//     const listingContext = `
+//     Property: ${listing.title}
+//     Location: ${listing.location}, ${listing.country}
+//     Price: ₹${listing.price}/night
+//     Max Persons: ${listing.maxPersons}
+//     Description: ${listing.description}
+//     Reviews: ${listing.reviews.length > 0
+//             ? listing.reviews.map(r => `${r.rating} stars: ${r.comment}`).join(" | ")
+//             : "No reviews yet"
+//         }
+//   `;
+
+//     try {
+//         const response = await ollama.chat({
+//             model: "llama3.2",
+//             messages: [{
+//                 role: "user",
+//                 content: `You are a helpful assistant for "${listing.title}".
+//           Only answer questions about this property.
+//           Be friendly and short (max 3 sentences).
+//           Property Info: ${listingContext}
+//           Guest asks: ${message}`
+//             }]
+//         });
+
+//         const reply = response.message.content;
+//         res.json({ success: true, reply });
+
+//     } catch (err) {
+//         console.log("Chatbot error:", err.message);
+//         res.json({ success: false, message: "AI is busy! Try again." });
+//     }
+// });
+
+
+
 //  Server  hai
-app.listen(8080, () => {
-    console.log(" Wanderlust running on http://localhost:8080");
+
+app.listen(PORT, () => {
+    console.log(`🚀 Wanderlust running on port ${PORT}`);
 });
+
+// app.listen(8080, () => {
+//     console.log(" Wanderlust running on http://localhost:8080");
+// });
 
 
 // ip server 
-app.listen(8080, "0.0.0.0", () => {
-    console.log("Server running");
-});
+// app.listen(8080, "0.0.0.0", () => {
+//     console.log("Server running");
+// });

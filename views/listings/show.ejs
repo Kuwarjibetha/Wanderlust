@@ -107,15 +107,6 @@
 
     </div>
 
-
-
-
-
-
-
-
-
-
     <!-- ── AI trip planner Result ── -->
     <div id="tripPlanBox" style="display:none;" class="container mt-4" style="max-width:900px;">
       <div class="card border-0 shadow-sm rounded-4 p-4" style="background: linear-gradient(135deg, #fff5f5, #fff);">
@@ -142,18 +133,6 @@
 
       </div>
     </div>
-
-
-
-
-
-
-
-
-
-
-
-
 
     <!--  review section hai  -->
 
@@ -207,17 +186,63 @@
               <div class="spinner-border spinner-border-sm text-danger" role="status"></div>
               <small class="text-muted ms-2">AI is reading reviews...</small>
             </div>
+
+            <!-- Add review form (guests only) -->
+            <% if (currUser && currUser.role==="guest" ) { %>
+              <form action="/listings/<%= listings._id %>/reviews" method="POST" class="border rounded-4 p-3 mb-4">
+                <h6 class="fw-bold mb-3">Leave a Review</h6>
+                <div class="mb-3">
+                  <label class="form-label">Rating</label>
+                  <select name="rating" class="form-select" required>
+                    <option value="">Choose rating</option>
+                    <option value="5">⭐⭐⭐⭐⭐ (5)</option>
+                    <option value="4">⭐⭐⭐⭐ (4)</option>
+                    <option value="3">⭐⭐⭐ (3)</option>
+                    <option value="2">⭐⭐ (2)</option>
+                    <option value="1">⭐ (1)</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label">Comment</label>
+                  <textarea name="comment" class="form-control" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-danger rounded-3">Submit Review</button>
+              </form>
+              <% } %>
+
+                <!-- Review cards -->
+                <% if (listings.reviews.length===0) { %>
+                  <p class="text-muted">No reviews yet. Be the first to review!</p>
+                  <% } else { %>
+                    <div class="row g-3">
+                      <% for (let review of listings.reviews) { %>
+                        <div class="col-md-6">
+                          <div class="border rounded-4 p-3 h-100">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                              <b>
+                                <%= review.author ? review.author.username : "Anonymous" %>
+                              </b>
+                              <span class="text-warning">
+                                <% for (let i=1; i <=5; i++) { %>
+                                  <%= i <=review.rating ? "⭐" : "☆" %>
+                                    <% } %>
+                              </span>
+                            </div>
+                            <p class="text-muted mb-2">
+                              <%= review.comment %>
+                            </p>
+                            <% if (currUser && review.author && review.author._id.equals(currUser._id)) { %>
+                              <form action="/listings/<%= listings._id %>/reviews/<%= review._id %>?_method=DELETE"
+                                method="POST">
+                                <button class="btn btn-sm btn-outline-danger rounded-3">Delete</button>
+                              </form>
+                              <% } %>
+                          </div>
+                        </div>
+                        <% } %>
+                    </div>
+                    <% } %>
     </div>
-
-
-
-
-
-
-
-
-
-
 
     <!-- ── AI Chatbot Bubble ── -->
     <% if (currUser && currUser.role==="guest" ) { %>
@@ -282,11 +307,9 @@
       const message = input.value.trim();
       if (!message) return;
 
-      // Show user message
       addMessage(message, "user");
       input.value = "";
 
-      // Show typing indicator
       const typingId = addTyping();
 
       try {
@@ -353,7 +376,6 @@
       if (el) el.remove();
     }
 
-    // Plan Trip 
     async function planTrip(listingId) {
       const days = document.getElementById("tripDays").value;
       if (!days || days < 1) {
@@ -387,7 +409,6 @@
       document.getElementById("tripBtn").innerText = "✨ Plan";
     }
 
-    // Review Summarizer 
     async function summarizeReviews(listingId) {
       document.getElementById("summaryLoading").style.display = "block";
       document.getElementById("summarizeBtn").disabled = true;
@@ -410,6 +431,4 @@
       document.getElementById("summarizeBtn").disabled = false;
       document.getElementById("summarizeBtn").innerText = "✨ AI Summary";
     }
-
-
   </script>
