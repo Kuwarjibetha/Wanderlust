@@ -235,8 +235,8 @@ const sendCancelHostEmail = async (booking) => {
     `,
   });
 };
+
 module.exports = {
-  transporter,
   sendGuestEmail,
   sendHostEmail,
   sendCancelGuestEmail,

@@ -1,7 +1,7 @@
 require("dotenv").config();                        //  must be first line!
-                // built-in Node.js, no install needed
+
 const express = require("express");
-// const helmet = require("helmet");
+const helmet = require("helmet");
 const app = express();
 const mongoose = require("mongoose");
 const path = require("path");
@@ -21,9 +21,7 @@ const Review = require("./models/review");
 const { isLoggedIn, isOwner, isHost, saveRedirectUrl } = require("./middleware");
 const multer = require("multer");
 const { cloudinary, storage } = require("./config/cloudinary");
-const { transporter, sendGuestEmail, sendHostEmail, sendCancelGuestEmail, sendCancelHostEmail } = require("./config/mailer");
-// const crypto = require("crypto");
-const MongoStore = require("connect-mongo").default || require("connect-mongo");
+const { sendGuestEmail, sendHostEmail, sendCancelGuestEmail, sendCancelHostEmail } = require("./config/mailer");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const ollama = require("ollama").default;  // ollama model
@@ -55,11 +53,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(session({
     secret: process.env.SECRET,
     resave: false,
-    saveUninitialized: false,
-    store: MongoStore.create({
-        mongoUrl: process.env.MONGO_URL,
-        touchAfter: 24 * 3600, // only update session once per 24hrs
-    }),
+    saveUninitialized: true,
     cookie: {
         httpOnly: true,
         expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
@@ -80,15 +74,6 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 
-
-// app.use(async (req, res, next) => {
-//   // This runs on EVERY request including login/signup
-//   if (req.user) {
-//     const freshUser = await User.findById(req.user._id).select("wishlist");
-//     res.locals.currUser = { ...req.user.toObject(), wishlist: freshUser.wishlist };
-//   }
-//   next();
-// });
 
 
 app.use(async (req, res, next) => {             //  Global Locals
@@ -142,71 +127,12 @@ app.get("/login", (req, res) => {
     res.render("auth/login");
 });
 
-app.post("/login", saveRedirectUrl, async (req, res, next) => {
-    const { username, password } = req.body;
-
-    try {
-        // Find user by username
-        const user = await User.findOne({ username });
-
-        if (!user) {
-            req.flash("error", "Invalid username or password!");
-            return res.redirect("/login");
-        }
-
-        // Check if account is locked
-        if (user.lockUntil && user.lockUntil > Date.now()) {
-            const minutesLeft = Math.ceil((user.lockUntil - Date.now()) / 60000);
-            req.flash("error", `locked:${minutesLeft}`);
-            return res.redirect("/login");
-        }
-
-        // If lock expired, reset attempts
-        if (user.lockUntil && user.lockUntil <= Date.now()) {
-            user.loginAttempts = 0;
-            user.lockUntil = null;
-            await user.save();
-        }
-
-        // Verify password using passport-local-mongoose method
-        user.authenticate(password, async (err, authenticatedUser) => {
-            if (err || !authenticatedUser) {
-                // Wrong password
-                user.loginAttempts += 1;
-
-                if (user.loginAttempts >= 5) {
-                    // Lock for 20 minutes
-                    user.lockUntil = new Date(Date.now() + 20 * 60 * 1000);
-                    await user.save();
-                    req.flash("error", `locked:0`);
-                    return res.redirect("/login");
-                }
-
-                const attemptsLeft = 5 - user.loginAttempts;
-                await user.save();
-                req.flash("error", `wrongpass:${attemptsLeft}`);
-                return res.redirect("/login");
-            }
-
-            //  Correct password — reset attempts
-            user.loginAttempts = 0;
-            user.lockUntil = null;
-            await user.save();
-
-            req.login(authenticatedUser, (err) => {
-                if (err) return next(err);
-                req.flash("success", `Welcome back, ${user.username}! 👋`);
-                const redirectUrl = res.locals.redirectUrl || "/";
-                res.redirect(redirectUrl);
-            });
-        });
-
-    } catch (err) {
-        console.log("Login error:", err.message);
-        req.flash("error", "Something went wrong! Try again.");
-        res.redirect("/login");
+app.post("/login", saveRedirectUrl, passport.authenticate("local", { failureRedirect: "/login", failureFlash: true, }),
+    (req, res) => {
+        req.flash("success", `Welcome back, ${req.user.username}! 👋`);
+        res.redirect("/");
     }
-});
+);
 
 
 
@@ -717,162 +643,6 @@ app.get("/wishlist", isLoggedIn, async (req, res) => {
     const user = await User.findById(req.user._id).populate("wishlist");
     res.render("wishlist/index.ejs", { wishlist: user.wishlist });
 });
-
-
-
-
-
-
-//  FORGOT PASSWORD ROUTES
-
-
-// forget password form show hoga
-app.get("/forgot-password", (req, res) => {
-  res.render("auth/forgot-password.ejs");
-});
-
-// Handle forgot password form submit
-app.post("/forgot-password", async (req, res) => {
-  const { email } = req.body;
-
-  try {
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      req.flash("error", "No account found with that email!");
-      return res.redirect("/forgot-password");
-    }
-
-
-
-    
-    const token = crypto.randomBytes(32).toString("hex");     // Generate secure random token
-
-    
-    user.resetToken = token;       // Save token + expiry (1 hour) to user
-    user.resetTokenExpiry = new Date(Date.now() + 60 * 60 * 1000);
-    await user.save();
-
-    
-    const resetLink = `${req.protocol}://${req.get("host")}/reset-password/${token}`;     // Build reset link
-
-    
-    // Send email
-    await transporter.sendMail({
-      from: `"Wanderlust 🏠" <${process.env.GMAIL_USER}>`,
-      to: email,
-      subject: "🔑 Reset Your Password — Wanderlust",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto;">
-          <div style="background:#e74c3c; color:white; padding:30px; text-align:center; border-radius:10px 10px 0 0;">
-            <h1>🏠 Wanderlust</h1>
-            <h2>Reset Your Password</h2>
-          </div>
-          <div style="padding:30px; border:1px solid #eee; border-radius:0 0 10px 10px;">
-            <p>Hi <b>${user.username}</b>,</p>
-            <p>We received a request to reset your password. Click the button below:</p>
-            <div style="text-align:center; margin:30px 0;">
-              <a href="${resetLink}"
-                 style="background:#e74c3c; color:white; padding:14px 30px;
-                        border-radius:8px; text-decoration:none; font-weight:bold;">
-                Reset My Password
-              </a>
-            </div>
-            <p style="color:#999; font-size:0.85rem;">
-              This link expires in <b>1 hour</b>. If you didn't request this, ignore this email.
-            </p>
-            <p style="color:#999; font-size:0.85rem;">— Team Wanderlust 🏠</p>
-          </div>
-        </div>
-      `,
-    });
-
-    req.flash("success", "Password reset link sent to your email! Check your inbox 📧");
-    res.redirect("/forgot-password");
-
-  } catch (err) {
-    console.log("Forgot password error:", err.message);
-    req.flash("error", "Something went wrong! Try again.");
-    res.redirect("/forgot-password");
-  }
-});
-
-
-
-// Show reset password form
-app.get("/reset-password/:token", async (req, res) => {
-  const { token } = req.params;
-
-  const user = await User.findOne({
-    resetToken: token,
-    resetTokenExpiry: { $gt: Date.now() }, // token not expired
-  });
-
-  if (!user) {
-    req.flash("error", "Reset link is invalid or has expired!");
-    return res.redirect("/forgot-password");
-  }
-
-  res.render("auth/reset-password.ejs", { token });
-});
-
-
-
-
-// Handle reset password form submit
-app.post("/reset-password/:token", async (req, res) => {
-  const { token } = req.params;
-  const { password } = req.body;
-
-  try {
-    const user = await User.findOne({
-      resetToken: token,
-      resetTokenExpiry: { $gt: Date.now() },
-    });
-
-    if (!user) {
-      req.flash("error", "Reset link is invalid or has expired!");
-      return res.redirect("/forgot-password");
-    }
-
-
-
-
-
-    // Set new password using passport-local-mongoose method
-    await user.setPassword(password);
-
-    // Clear reset token + unlock account
-    user.resetToken = null;
-    user.resetTokenExpiry = null;
-    user.loginAttempts = 0;
-    user.lockUntil = null;
-    await user.save();
-
-    req.flash("success", "Password reset successfully! Please login. ✅");
-    res.redirect("/login");
-
-  } catch (err) {
-    console.log("Reset password error:", err.message);
-    req.flash("error", "Something went wrong! Try again.");
-    res.redirect("/forgot-password");
-  }
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

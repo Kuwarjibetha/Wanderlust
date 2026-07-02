@@ -30,25 +30,6 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  // Login attempt tracking
-  loginAttempts: {
-    type: Number,
-    default: 0,
-  },
-  lockUntil: {
-    type: Date,
-    default: null,
-  },
-
-  // Password reset
-  resetToken: {
-    type: String,
-    default: null,
-  },
-  resetTokenExpiry: {
-    type: Date,
-    default: null,
-  },
   wishlist: [
     {
       type: mongoose.Schema.Types.ObjectId,

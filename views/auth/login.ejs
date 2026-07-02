@@ -1,118 +1,31 @@
-<%- layout("/layouts/boilerplate") %>
-<div class="row mt-5 justify-content-center">
-  <div class="col-md-5 col-sm-8">
-    <div class="card border-0 shadow-sm rounded-4 p-4">
+<% layout('layouts/boilerplate') %>
+  <div class="row mt-5 justify-content-center">
+    <div class="col-md-5 col-sm-8">
+      <h2 class="mb-4">Welcome Back 👋</h2>
 
-      <h2 class="fw-bold mb-1">Welcome Back 👋</h2>
-      <p class="text-muted mb-4">Login to your Wanderlust account</p>
+      <!-- Error flash show here  -->
+      <% if (error && error.length> 0) { %>
+        <div class="alert alert-danger">
+          <%= error %>
+        </div>
+        <% } %>
 
-      <%
-        
-        let isLocked = false; // Parse flash error messages
-        let minutesLeft = 0;
-        let attemptsLeft = null;
-        let generalError = null;
+          <form action="/login" method="POST">
+            <div class="mb-3">
+              <label class="form-label">Username</label>
+              <input type="text" name="username" class="form-control" placeholder="your username" required />
+            </div>
 
-        if (error && error.length > 0) {
-          const msg = error[0];
-          if (msg.startsWith("locked:")) {
-            isLocked = true;
-            minutesLeft = parseInt(msg.split(":")[1]);
-          } else if (msg.startsWith("wrongpass:")) {
-            attemptsLeft = parseInt(msg.split(":")[1]);
-          } else {
-            generalError = msg;
-          }
-        }
-      %>
+            <div class="mb-3">
+              <label class="form-label">Password</label>
+              <input type="password" name="password" class="form-control" placeholder="your password" required />
+            </div>
 
-      <!-- Account Locked Message -->
-      <% if (isLocked) { %>
-        <div class="alert border rounded-4 p-4 mb-4" style="background:#fff5f5; border-color:#ffcccc !important;">
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <span style="font-size:1.5rem;">🔒</span>
-            <h6 class="fw-bold mb-0 text-danger">Account Temporarily Locked</h6>
-          </div>
-          <p class="text-muted mb-3" style="font-size:0.9rem;">
-            Too many failed login attempts. Please choose one of the options below:
+            <button class="btn btn-danger w-100">Log In</button>
+          </form>
+
+          <p class="mt-3 text-center">
+            New here? <a href="/signup">Create an account</a>
           </p>
-          <div class="d-flex gap-2 flex-wrap">
-            <% if (minutesLeft > 0) { %>
-              <div class="border rounded-3 p-3 text-center flex-fill" style="background:white;">
-                <div style="font-size:1.5rem;">⏳</div>
-                <p class="fw-bold mb-0" style="font-size:0.85rem;">Wait <%= minutesLeft %> minute<%= minutesLeft > 1 ? "s" : "" %></p>
-                <small class="text-muted">Auto unlocks soon</small>
-              </div>
-            <% } %>
-            <a href="/forgot-password"
-               class="border rounded-3 p-3 text-center flex-fill text-decoration-none"
-               style="background:white;">
-              <div style="font-size:1.5rem;">📧</div>
-              <p class="fw-bold mb-0" style="font-size:0.85rem;">Reset Password</p>
-              <small class="text-muted">Get email link</small>
-            </a>
-          </div>
-        </div>
-
-      <!-- Wrong password warning degaa -->
-      <% } else if (attemptsLeft !== null) { %>
-        <div class="alert alert-warning rounded-3 mb-3">
-          ⚠️ Wrong password!
-          <b><%= attemptsLeft %> attempt<%= attemptsLeft !== 1 ? "s" : "" %> left</b>
-          before your account is locked for 20 minutes.
-        </div>
-
-
-      <!-- Normal error -->
-      <% } else if (generalError) { %>
-        <div class="alert alert-danger rounded-3 mb-3">
-          <%= generalError %>
-        </div>
-      <% } %>
-
-
-      <!-- Login Form hidden when locked -->
-      <% if (!isLocked) { %>
-        <form action="/login" method="POST">
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Username</label>
-            <input
-              type="text"
-              name="username"
-              class="form-control rounded-3"
-              placeholder="your username"
-              required
-            />
-          </div>
-
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Password</label>
-            <input
-              type="password"
-              name="password"
-              class="form-control rounded-3"
-              placeholder="your password"
-              required
-            />
-          </div>
-
-          <!-- Forgot Password Link -->
-          <div class="text-end mb-3">
-            <a href="/forgot-password" class="text-danger" style="font-size:0.9rem;">
-              Forgot Password?
-            </a>
-          </div>
-
-          <button class="btn btn-danger w-100 py-2 rounded-3 fw-bold">
-            Log In
-          </button>
-        </form>
-      <% } %>
-
-      <p class="mt-3 text-center">
-        New here? <a href="/signup" class="text-danger">Create an account</a>
-      </p>
-
     </div>
   </div>
-</div>
